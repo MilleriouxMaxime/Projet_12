@@ -1,19 +1,41 @@
 from datetime import datetime, UTC
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Numeric
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    DateTime,
+    Boolean,
+    ForeignKey,
+    Numeric,
+    Enum,
+)
+from sqlalchemy.orm import relationship, declarative_base
+import enum
+from werkzeug.security import generate_password_hash, check_password_hash
 
 Base = declarative_base()
+
+
+class Department(enum.Enum):
+    COMMERCIAL = "commercial"
+    SUPPORT = "support"
+    MANAGEMENT = "management"
 
 
 class Employee(Base):
     __tablename__ = "employee"
 
     id = Column(Integer, primary_key=True)
+    employee_number = Column(
+        String, unique=True, nullable=False
+    )  # Unique employee identifier
     full_name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
-    password = Column(String, nullable=False)
-    role = Column(String, nullable=False)  # commercial, support, or management
+    _password_hash = Column(
+        "password", String, nullable=False
+    )  # Renamed to indicate it's hashed
+    department = Column(Enum(Department), nullable=False)
+    role = Column(String, nullable=False)  # Specific role within department
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
     updated_at = Column(
         DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
@@ -23,6 +45,23 @@ class Employee(Base):
     clients = relationship("Client", back_populates="commercial")
     contracts = relationship("Contract", back_populates="commercial")
     events = relationship("Event", back_populates="support")
+
+    @property
+    def password(self):
+        raise AttributeError("password is not a readable attribute")
+
+    @password.setter
+    def password(self, password):
+        self._password_hash = generate_password_hash(password)
+
+    def verify_password(self, password):
+        return check_password_hash(self._password_hash, password)
+
+    def has_permission(self, required_department):
+        """Check if employee has permission based on department"""
+        if self.department == Department.MANAGEMENT:
+            return True
+        return self.department == required_department
 
 
 class Client(Base):
