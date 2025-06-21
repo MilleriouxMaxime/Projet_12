@@ -55,6 +55,39 @@ def mock_repository(mock_session):
             created_at=datetime.now(UTC),
         )
     ]
+    repository.get_by_commercial.return_value = [
+        Contract(
+            id=1,
+            client_id=1,
+            commercial_id=1,
+            total_amount=Decimal("1000.00"),
+            remaining_amount=Decimal("500.00"),
+            is_signed=False,
+            created_at=datetime.now(UTC),
+        )
+    ]
+    repository.get_unsigned_contracts.return_value = [
+        Contract(
+            id=1,
+            client_id=1,
+            commercial_id=1,
+            total_amount=Decimal("1000.00"),
+            remaining_amount=Decimal("500.00"),
+            is_signed=False,
+            created_at=datetime.now(UTC),
+        )
+    ]
+    repository.get_unpaid_contracts.return_value = [
+        Contract(
+            id=1,
+            client_id=1,
+            commercial_id=1,
+            total_amount=Decimal("1000.00"),
+            remaining_amount=Decimal("500.00"),
+            is_signed=False,
+            created_at=datetime.now(UTC),
+        )
+    ]
     repository.get_client.return_value = Client(
         id=1, full_name="Test Client", email="test@example.com"
     )
@@ -67,6 +100,22 @@ def mock_repository(mock_session):
         role="Sales",
     )
     return repository
+
+
+@pytest.fixture
+def mock_auth_service():
+    """Create a mock auth service."""
+    auth_service = Mock()
+    auth_service.has_permission.return_value = True
+    auth_service.get_current_user.return_value = Employee(
+        id=1,
+        employee_number="EMP001",
+        full_name="Test Commercial",
+        email="commercial@example.com",
+        department=Department.COMMERCIAL,
+        role="Sales",
+    )
+    return auth_service
 
 
 @pytest.fixture
@@ -260,3 +309,147 @@ class TestContractCommands:
         assert result.exit_code == 0
         assert "No contracts found" in result.output
         mock_repository.get_all.assert_called_once()
+
+    @patch("commands.contract_commands.DatabaseConnection.get_session")
+    @patch("commands.contract_commands.ContractRepository")
+    @patch("commands.contract_commands.AuthService")
+    def test_update_contract_commercial_success(
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
+        mock_auth_service,
+    ):
+        """Test successful contract update by commercial user."""
+        mock_get_session.return_value.__enter__.return_value = mock_session
+        mock_repo_class.return_value = mock_repository
+        mock_auth.return_value = mock_auth_service
+
+        result = runner.invoke(
+            contract,
+            [
+                "update",
+                "1",
+                "--total-amount",
+                "2000.00",
+                "--remaining-amount",
+                "1000.00",
+                "--is-signed",
+                "true",
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Successfully updated contract 1" in result.output
+        mock_repository.update.assert_called_once()
+
+    @patch("commands.contract_commands.DatabaseConnection.get_session")
+    @patch("commands.contract_commands.ContractRepository")
+    @patch("commands.contract_commands.AuthService")
+    def test_update_contract_wrong_commercial(
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
+        mock_auth_service,
+    ):
+        """Test contract update by wrong commercial user."""
+        mock_get_session.return_value.__enter__.return_value = mock_session
+        mock_repo_class.return_value = mock_repository
+        mock_auth.return_value = mock_auth_service
+        mock_repository.get_by_id.return_value = Contract(
+            id=1,
+            client_id=1,
+            commercial_id=2,  # Different from current user's ID
+            total_amount=Decimal("1000.00"),
+            remaining_amount=Decimal("500.00"),
+            is_signed=False,
+            created_at=datetime.now(UTC),
+        )
+
+        result = runner.invoke(contract, ["update", "1", "--total-amount", "2000.00"])
+
+        assert result.exit_code == 0
+        assert "Error: You can only update contracts assigned to you" in result.output
+        mock_repository.update.assert_not_called()
+
+    @patch("commands.contract_commands.DatabaseConnection.get_session")
+    @patch("commands.contract_commands.ContractRepository")
+    @patch("commands.contract_commands.AuthService")
+    def test_list_contracts_unsigned(
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
+        mock_auth_service,
+    ):
+        """Test listing unsigned contracts."""
+        mock_get_session.return_value.__enter__.return_value = mock_session
+        mock_repo_class.return_value = mock_repository
+        mock_auth.return_value = mock_auth_service
+
+        result = runner.invoke(contract, ["list", "--unsigned"])
+
+        assert result.exit_code == 0
+        assert "Contract ID: 1" in result.output
+        assert "Signed: False" in result.output
+        mock_repository.get_unsigned_contracts.assert_called_once()
+
+    @patch("commands.contract_commands.DatabaseConnection.get_session")
+    @patch("commands.contract_commands.ContractRepository")
+    @patch("commands.contract_commands.AuthService")
+    def test_list_contracts_unpaid(
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
+        mock_auth_service,
+    ):
+        """Test listing unpaid contracts."""
+        mock_get_session.return_value.__enter__.return_value = mock_session
+        mock_repo_class.return_value = mock_repository
+        mock_auth.return_value = mock_auth_service
+
+        result = runner.invoke(contract, ["list", "--unpaid"])
+
+        assert result.exit_code == 0
+        assert "Contract ID: 1" in result.output
+        assert "Remaining Amount: 500.00" in result.output
+        mock_repository.get_unpaid_contracts.assert_called_once()
+
+    @patch("commands.contract_commands.DatabaseConnection.get_session")
+    @patch("commands.contract_commands.ContractRepository")
+    @patch("commands.contract_commands.AuthService")
+    def test_list_contracts_commercial(
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
+        mock_auth_service,
+    ):
+        """Test listing contracts for commercial user."""
+        mock_get_session.return_value.__enter__.return_value = mock_session
+        mock_repo_class.return_value = mock_repository
+        mock_auth.return_value = mock_auth_service
+
+        result = runner.invoke(contract, ["list"])
+
+        assert result.exit_code == 0
+        assert "Contract ID: 1" in result.output
+        assert "Commercial ID: 1" in result.output
+        mock_repository.get_by_commercial.assert_called_once()
