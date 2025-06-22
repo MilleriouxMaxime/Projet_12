@@ -1,8 +1,9 @@
 import click
-from database.connection import DatabaseConnection
-from repositories.client_repository import ClientRepository
-from models import Department
+
 from auth import AuthService
+from database.connection import DatabaseConnection
+from models import Department
+from repositories.client_repository import ClientRepository
 
 
 @click.group()
@@ -12,10 +13,14 @@ def client():
 
 
 @client.command()
-@click.option("--full-name", required=True, help="Client full name")
-@click.option("--email", required=True, help="Client email")
-@click.option("--phone", help="Client phone number")
-@click.option("--company-name", help="Client company name")
+@click.option(
+    "--full-name", prompt="Client full name", required=True, help="Client full name"
+)
+@click.option("--email", prompt="Client email", required=True, help="Client email")
+@click.option("--phone", prompt="Client phone number", help="Client phone number")
+@click.option(
+    "--company-name", prompt="Client company name", help="Client company name"
+)
 def create(full_name: str, email: str, phone: str = None, company_name: str = None):
     """Create a new client."""
     auth_service = AuthService()
@@ -55,16 +60,33 @@ def create(full_name: str, email: str, phone: str = None, company_name: str = No
 
 @client.command()
 @click.argument("client_id", type=int)
-@click.option("--full-name", help="New full name")
-@click.option("--email", help="New email")
-@click.option("--phone", help="New phone number")
-@click.option("--company-name", help="New company name")
+@click.option(
+    "--full-name",
+    prompt="New full name (press Enter to skip)",
+    default="",
+    help="New full name",
+)
+@click.option(
+    "--email", prompt="New email (press Enter to skip)", default="", help="New email"
+)
+@click.option(
+    "--phone",
+    prompt="New phone number (press Enter to skip)",
+    default="",
+    help="New phone number",
+)
+@click.option(
+    "--company-name",
+    prompt="New company name (press Enter to skip)",
+    default="",
+    help="New company name",
+)
 def update(
     client_id: int,
-    full_name: str = None,
-    email: str = None,
-    phone: str = None,
-    company_name: str = None,
+    full_name: str = "",
+    email: str = "",
+    phone: str = "",
+    company_name: str = "",
 ):
     """Update an existing client."""
     auth_service = AuthService()
@@ -99,13 +121,13 @@ def update(
                 return
 
         update_data = {}
-        if full_name is not None:
+        if full_name.strip():
             update_data["full_name"] = full_name
-        if email is not None:
+        if email.strip():
             update_data["email"] = email
-        if phone is not None:
+        if phone.strip():
             update_data["phone"] = phone
-        if company_name is not None:
+        if company_name.strip():
             update_data["company_name"] = company_name
 
         if not update_data:

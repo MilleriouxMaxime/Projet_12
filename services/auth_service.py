@@ -1,9 +1,11 @@
-from datetime import datetime, UTC, timedelta
-import jwt
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from repositories.employee_repository import EmployeeRepository
+
+import jwt
+
 from database.connection import DatabaseConnection
-import click
+from models import Department, Employee
+from repositories.employee_repository import EmployeeRepository
 
 
 class AuthService:
@@ -68,3 +70,41 @@ class AuthService:
             if self.token_file.exists():
                 self.token_file.unlink()
             return None, "invalid"
+
+    def get_current_user(self) -> Employee | None:
+        """Get the current authenticated user from the token."""
+        token = self.load_token()
+        if not token:
+            return None
+
+        payload, error = self.verify_token(token)
+        if error or not payload:
+            return None
+
+        user_id = payload.get("user_id")
+        if not user_id:
+            return None
+
+        with DatabaseConnection.get_session() as session:
+            repository = EmployeeRepository(session)
+            return repository.get_by_id(user_id)
+
+    def has_permission(self, required_department: Department) -> bool:
+        """Check if the current user has permission for the required department.
+
+        Args:
+            required_department: The department permission required
+
+        Returns:
+            bool: True if user has permission, False otherwise
+        """
+        current_user = self.get_current_user()
+        if not current_user:
+            return False
+
+        # Management has access to everything
+        if current_user.department == Department.MANAGEMENT:
+            return True
+
+        # Check if user's department matches required department
+        return current_user.department == required_department

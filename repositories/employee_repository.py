@@ -1,8 +1,10 @@
-from sqlalchemy.orm import Session
-from models import Employee, Department
-from datetime import datetime, UTC
 import random
 import string
+from datetime import UTC, datetime
+
+from sqlalchemy.orm import Session
+
+from models import Department, Employee
 
 
 class EmployeeRepository:
@@ -76,3 +78,7 @@ class EmployeeRepository:
         if employee and employee.verify_password(password):
             return True, employee
         return False, None
+
+    def get_by_id(self, employee_id: int) -> Employee | None:
+        """Récupère un employé par son ID."""
+        return self.session.query(Employee).filter(Employee.id == employee_id).first()

@@ -1,9 +1,10 @@
 import click
-from models import Employee, Department
-from database.connection import DatabaseConnection
-from repositories.employee_repository import EmployeeRepository
+
 from auth import require_role
+from database.connection import DatabaseConnection
 from logging_config import log_employee_change, log_exception
+from models import Department, Employee
+from repositories.employee_repository import EmployeeRepository
 
 
 @click.group()
