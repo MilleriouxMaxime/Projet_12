@@ -13,6 +13,24 @@ def mock_session():
 
 
 @pytest.fixture
+def mock_contract_repository(mock_session):
+    """Create a mock contract repository."""
+    repository = Mock()
+    repository.get_by_commercial.return_value = [
+        Contract(
+            id=1,
+            client_id=1,
+            commercial_id=1,
+            total_amount=1000.00,
+            remaining_amount=500.00,
+            is_signed=True,
+            created_at=datetime.now(UTC),
+        )
+    ]
+    return repository
+
+
+@pytest.fixture
 def mock_repository(mock_session):
     """Create a mock event repository."""
     repository = Mock()
@@ -130,20 +148,24 @@ class TestEventCommands:
 
     @patch("commands.event_commands.DatabaseConnection.get_session")
     @patch("commands.event_commands.EventRepository")
+    @patch("commands.event_commands.ContractRepository")
     @patch("commands.event_commands.AuthService")
     def test_create_event_success(
         self,
         mock_auth,
+        mock_contract_repo_class,
         mock_repo_class,
         mock_get_session,
         runner,
         mock_repository,
+        mock_contract_repository,
         mock_session,
         mock_auth_service,
     ):
         """Test successful event creation."""
         mock_get_session.return_value.__enter__.return_value = mock_session
         mock_repo_class.return_value = mock_repository
+        mock_contract_repo_class.return_value = mock_contract_repository
         mock_auth.return_value = mock_auth_service
 
         result = runner.invoke(
@@ -180,20 +202,24 @@ class TestEventCommands:
 
     @patch("commands.event_commands.DatabaseConnection.get_session")
     @patch("commands.event_commands.EventRepository")
+    @patch("commands.event_commands.ContractRepository")
     @patch("commands.event_commands.AuthService")
     def test_create_event_unauthorized(
         self,
         mock_auth,
+        mock_contract_repo_class,
         mock_repo_class,
         mock_get_session,
         runner,
         mock_repository,
+        mock_contract_repository,
         mock_session,
         mock_auth_service,
     ):
         """Test event creation with unauthorized user."""
         mock_get_session.return_value.__enter__.return_value = mock_session
         mock_repo_class.return_value = mock_repository
+        mock_contract_repo_class.return_value = mock_contract_repository
         mock_auth.return_value = mock_auth_service
         mock_auth_service.has_permission.return_value = False
 
@@ -225,20 +251,24 @@ class TestEventCommands:
 
     @patch("commands.event_commands.DatabaseConnection.get_session")
     @patch("commands.event_commands.EventRepository")
+    @patch("commands.event_commands.ContractRepository")
     @patch("commands.event_commands.AuthService")
     def test_create_event_unsigned_contract(
         self,
         mock_auth,
+        mock_contract_repo_class,
         mock_repo_class,
         mock_get_session,
         runner,
         mock_repository,
+        mock_contract_repository,
         mock_session,
         mock_auth_service,
     ):
         """Test event creation for unsigned contract."""
         mock_get_session.return_value.__enter__.return_value = mock_session
         mock_repo_class.return_value = mock_repository
+        mock_contract_repo_class.return_value = mock_contract_repository
         mock_auth.return_value = mock_auth_service
         mock_repository.get_contract.return_value = Contract(
             id=1,
@@ -275,20 +305,24 @@ class TestEventCommands:
 
     @patch("commands.event_commands.DatabaseConnection.get_session")
     @patch("commands.event_commands.EventRepository")
+    @patch("commands.event_commands.ContractRepository")
     @patch("commands.event_commands.AuthService")
     def test_update_event_success(
         self,
         mock_auth,
+        mock_contract_repo_class,
         mock_repo_class,
         mock_get_session,
         runner,
         mock_repository,
+        mock_contract_repository,
         mock_session,
         mock_auth_service,
     ):
         """Test successful event update."""
         mock_get_session.return_value.__enter__.return_value = mock_session
         mock_repo_class.return_value = mock_repository
+        mock_contract_repo_class.return_value = mock_contract_repository
         mock_auth.return_value = mock_auth_service
 
         result = runner.invoke(
@@ -313,20 +347,24 @@ class TestEventCommands:
 
     @patch("commands.event_commands.DatabaseConnection.get_session")
     @patch("commands.event_commands.EventRepository")
+    @patch("commands.event_commands.ContractRepository")
     @patch("commands.event_commands.AuthService")
     def test_update_event_wrong_commercial(
         self,
         mock_auth,
+        mock_contract_repo_class,
         mock_repo_class,
         mock_get_session,
         runner,
         mock_repository,
+        mock_contract_repository,
         mock_session,
         mock_auth_service,
     ):
         """Test event update by wrong commercial user."""
         mock_get_session.return_value.__enter__.return_value = mock_session
         mock_repo_class.return_value = mock_repository
+        mock_contract_repo_class.return_value = mock_contract_repository
         mock_auth.return_value = mock_auth_service
         mock_repository.get_contract.return_value = Contract(
             id=1,
@@ -348,20 +386,24 @@ class TestEventCommands:
 
     @patch("commands.event_commands.DatabaseConnection.get_session")
     @patch("commands.event_commands.EventRepository")
+    @patch("commands.event_commands.ContractRepository")
     @patch("commands.event_commands.AuthService")
     def test_list_events_success(
         self,
         mock_auth,
+        mock_contract_repo_class,
         mock_repo_class,
         mock_get_session,
         runner,
         mock_repository,
+        mock_contract_repository,
         mock_session,
         mock_auth_service,
     ):
         """Test successful event listing."""
         mock_get_session.return_value.__enter__.return_value = mock_session
         mock_repo_class.return_value = mock_repository
+        mock_contract_repo_class.return_value = mock_contract_repository
         mock_auth.return_value = mock_auth_service
 
         result = runner.invoke(event, ["list"])
@@ -378,20 +420,24 @@ class TestEventCommands:
 
     @patch("commands.event_commands.DatabaseConnection.get_session")
     @patch("commands.event_commands.EventRepository")
+    @patch("commands.event_commands.ContractRepository")
     @patch("commands.event_commands.AuthService")
     def test_list_events_empty(
         self,
         mock_auth,
+        mock_contract_repo_class,
         mock_repo_class,
         mock_get_session,
         runner,
         mock_repository,
+        mock_contract_repository,
         mock_session,
         mock_auth_service,
     ):
         """Test event listing with no events."""
         mock_get_session.return_value.__enter__.return_value = mock_session
         mock_repo_class.return_value = mock_repository
+        mock_contract_repo_class.return_value = mock_contract_repository
         mock_auth.return_value = mock_auth_service
         mock_repository.get_by_contract.return_value = []
 
@@ -399,3 +445,105 @@ class TestEventCommands:
 
         assert result.exit_code == 0
         assert "No events found" in result.output
+
+    @patch("commands.event_commands.DatabaseConnection.get_session")
+    @patch("commands.event_commands.EventRepository")
+    @patch("commands.event_commands.ContractRepository")
+    @patch("commands.event_commands.AuthService")
+    def test_list_events_without_support(
+        self,
+        mock_auth,
+        mock_contract_repo_class,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_contract_repository,
+        mock_session,
+        mock_auth_service,
+    ):
+        """Test listing events without support."""
+        mock_get_session.return_value.__enter__.return_value = mock_session
+        mock_repo_class.return_value = mock_repository
+        mock_contract_repo_class.return_value = mock_contract_repository
+        mock_auth.return_value = mock_auth_service
+        mock_auth_service.get_current_user.return_value = Employee(
+            id=1,
+            employee_number="EMP001",
+            full_name="Test Management",
+            email="management@example.com",
+            department=Department.MANAGEMENT,
+            role="Manager",
+        )
+        mock_repository.get_without_support.return_value = [
+            Event(
+                id=1,
+                contract_id=1,
+                client_id=1,
+                support_id=None,
+                name="Test Event",
+                start_date=datetime.now(UTC),
+                end_date=datetime.now(UTC),
+                location="Test Location",
+                attendees=10,
+                notes="Test Notes",
+            )
+        ]
+
+        result = runner.invoke(event, ["list", "--without-support"])
+
+        assert result.exit_code == 0
+        assert "Event ID: 1" in result.output
+        assert "Support ID: None" in result.output
+        mock_repository.get_without_support.assert_called_once()
+
+    @patch("commands.event_commands.DatabaseConnection.get_session")
+    @patch("commands.event_commands.EventRepository")
+    @patch("commands.event_commands.ContractRepository")
+    @patch("commands.event_commands.AuthService")
+    def test_list_my_events_support(
+        self,
+        mock_auth,
+        mock_contract_repo_class,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_contract_repository,
+        mock_session,
+        mock_auth_service,
+    ):
+        """Test listing events assigned to support user."""
+        mock_get_session.return_value.__enter__.return_value = mock_session
+        mock_repo_class.return_value = mock_repository
+        mock_contract_repo_class.return_value = mock_contract_repository
+        mock_auth.return_value = mock_auth_service
+        mock_auth_service.get_current_user.return_value = Employee(
+            id=1,
+            employee_number="EMP001",
+            full_name="Test Support",
+            email="support@example.com",
+            department=Department.SUPPORT,
+            role="Support",
+        )
+        mock_repository.get_by_support.return_value = [
+            Event(
+                id=1,
+                contract_id=1,
+                client_id=1,
+                support_id=1,
+                name="Test Event",
+                start_date=datetime.now(UTC),
+                end_date=datetime.now(UTC),
+                location="Test Location",
+                attendees=10,
+                notes="Test Notes",
+            )
+        ]
+
+        result = runner.invoke(event, ["list", "--my-events"])
+
+        assert result.exit_code == 0
+        assert "Event ID: 1" in result.output
+        assert "Support ID: 1" in result.output
+        mock_repository.get_by_support.assert_called_once_with(1)

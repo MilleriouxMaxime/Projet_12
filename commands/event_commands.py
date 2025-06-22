@@ -2,6 +2,7 @@ import click
 from datetime import datetime
 from database.connection import DatabaseConnection
 from repositories.event_repository import EventRepository
+from repositories.contract_repository import ContractRepository
 from models import Department
 from auth import AuthService
 
@@ -196,14 +197,30 @@ def update(
 @event.command()
 @click.option("--contract-id", type=int, help="Filter by contract ID")
 @click.option("--client-id", type=int, help="Filter by client ID")
-def list(contract_id: int = None, client_id: int = None):
+@click.option(
+    "--without-support", is_flag=True, help="Show only events without support assigned"
+)
+@click.option(
+    "--my-events",
+    is_flag=True,
+    help="Show only events assigned to me (for support users)",
+)
+def list(
+    contract_id: int = None,
+    client_id: int = None,
+    without_support: bool = False,
+    my_events: bool = False,
+):
     """List events with optional filters."""
     auth_service = AuthService()
     if not (
         auth_service.has_permission(Department.COMMERCIAL)
         or auth_service.has_permission(Department.MANAGEMENT)
+        or auth_service.has_permission(Department.SUPPORT)
     ):
-        click.echo("Error: Only commercial or management users can list events")
+        click.echo(
+            "Error: Only commercial, management, or support users can list events"
+        )
         return
 
     with DatabaseConnection.get_session() as session:
@@ -226,8 +243,15 @@ def list(contract_id: int = None, client_id: int = None):
             events = []
             for contract_id in contract_ids:
                 events.extend(repo.get_by_contract(contract_id))
+        elif current_user.department == Department.SUPPORT:
+            if my_events:
+                events = repo.get_by_support(current_user.id)
+            else:
+                events = repo.get_all()
         else:  # Management user
-            if contract_id:
+            if without_support:
+                events = repo.get_without_support()
+            elif contract_id:
                 events = repo.get_by_contract(contract_id)
             elif client_id:
                 events = repo.get_by_client(client_id)

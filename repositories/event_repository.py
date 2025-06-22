@@ -17,7 +17,7 @@ class EventRepository:
         return event
 
     def get_by_id(self, event_id: int) -> Optional[Event]:
-        """Get an event by its ID."""
+        """Get an event by ID."""
         return self.session.query(Event).filter(Event.id == event_id).first()
 
     def get_all(self) -> List[Event]:
@@ -36,8 +36,12 @@ class EventRepository:
         """Get all events assigned to a specific support employee."""
         return self.session.query(Event).filter(Event.support_id == support_id).all()
 
+    def get_without_support(self) -> List[Event]:
+        """Get all events that don't have a support employee assigned."""
+        return self.session.query(Event).filter(Event.support_id.is_(None)).all()
+
     def update(self, event_id: int, event_data: dict) -> Optional[Event]:
-        """Update an event."""
+        """Update an existing event."""
         event = self.get_by_id(event_id)
         if event:
             for key, value in event_data.items():
