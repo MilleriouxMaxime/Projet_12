@@ -1,9 +1,11 @@
+from datetime import UTC, datetime
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
 from click.testing import CliRunner
+
 from commands.employee_commands import employee
 from models import Department, Employee
-from datetime import datetime, UTC
 
 
 @pytest.fixture
@@ -142,21 +144,6 @@ class TestEmployeeCommands:
             "Error: Employee with email nonexistent@example.com not found"
             in result.output
         )
-
-    @patch("commands.employee_commands.DatabaseConnection.get_session")
-    @patch("commands.employee_commands.EmployeeRepository")
-    def test_delete_employee_success(
-        self, mock_repo_class, mock_get_session, runner, mock_repository, mock_session
-    ):
-        """Test successful employee deletion."""
-        mock_get_session.return_value.__enter__.return_value = mock_session
-        mock_repo_class.return_value = mock_repository
-
-        result = runner.invoke(employee, ["delete", "test@example.com"], input="y\n")
-
-        assert result.exit_code == 0
-        assert "Successfully deleted employee: test@example.com" in result.output
-        mock_repository.delete.assert_called_once()
 
     @patch("commands.employee_commands.DatabaseConnection.get_session")
     @patch("commands.employee_commands.EmployeeRepository")

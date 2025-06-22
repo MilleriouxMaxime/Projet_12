@@ -2,10 +2,8 @@ import click
 from models import Employee, Department
 from database.connection import DatabaseConnection
 from repositories.employee_repository import EmployeeRepository
-from datetime import datetime, UTC
-import random
-import string
 from auth import require_role
+from logging_config import log_employee_change, log_exception
 
 
 @click.group()
@@ -34,23 +32,39 @@ def employee():
 )
 def create(full_name, email, department, role, password):
     """Create a new employee."""
-    with DatabaseConnection.get_session() as session:
-        repository = EmployeeRepository(session)
+    try:
+        with DatabaseConnection.get_session() as session:
+            repository = EmployeeRepository(session)
 
-        # Check if email already exists
-        if repository.get_by_email(email):
-            click.echo(f"Error: Employee with email {email} already exists.")
-            return
+            # Check if email already exists
+            if repository.get_by_email(email):
+                click.echo(f"Error: Employee with email {email} already exists.")
+                return
 
-        # Create new employee
-        employee = repository.create(
-            full_name=full_name,
-            email=email,
-            department=Department(department),
-            role=role,
-            password=password,
-        )
-        click.echo(f"Successfully created employee: {employee.full_name}")
+            # Create new employee
+            employee = repository.create(
+                full_name=full_name,
+                email=email,
+                department=Department(department),
+                role=role,
+                password=password,
+            )
+
+            # Log employee creation
+            log_employee_change(
+                "created",
+                {
+                    "employee_number": employee.employee_number,
+                    "full_name": employee.full_name,
+                    "department": employee.department.value,
+                    "role": employee.role,
+                },
+            )
+
+            click.echo(f"Successfully created employee: {employee.full_name}")
+    except Exception as e:
+        log_exception(e, {"action": "create_employee", "email": email})
+        click.echo(f"Error creating employee: {str(e)}")
 
 
 @employee.command()
@@ -65,23 +79,38 @@ def create(full_name, email, department, role, password):
 @click.option("--password", help="New password", hide_input=True)
 def update(email, full_name, department, role, password):
     """Update an existing employee."""
-    with DatabaseConnection.get_session() as session:
-        repository = EmployeeRepository(session)
+    try:
+        with DatabaseConnection.get_session() as session:
+            repository = EmployeeRepository(session)
 
-        # Update employee
-        employee = repository.update(
-            email,
-            full_name=full_name,
-            department=department,
-            role=role,
-            password=password,
-        )
+            # Update employee
+            employee = repository.update(
+                email,
+                full_name=full_name,
+                department=department,
+                role=role,
+                password=password,
+            )
 
-        if not employee:
-            click.echo(f"Error: Employee with email {email} not found.")
-            return
+            if not employee:
+                click.echo(f"Error: Employee with email {email} not found.")
+                return
 
-        click.echo(f"Successfully updated employee: {employee.full_name}")
+            # Log employee update
+            log_employee_change(
+                "updated",
+                {
+                    "employee_number": employee.employee_number,
+                    "full_name": employee.full_name,
+                    "department": employee.department.value,
+                    "role": employee.role,
+                },
+            )
+
+            click.echo(f"Successfully updated employee: {employee.full_name}")
+    except Exception as e:
+        log_exception(e, {"action": "update_employee", "email": email})
+        click.echo(f"Error updating employee: {str(e)}")
 
 
 @employee.command()
@@ -89,14 +118,35 @@ def update(email, full_name, department, role, password):
 @click.confirmation_option(prompt="Are you sure you want to delete this employee?")
 def delete(email):
     """Delete an employee."""
-    with DatabaseConnection.get_session() as session:
-        repository = EmployeeRepository(session)
+    try:
+        with DatabaseConnection.get_session() as session:
+            repository = EmployeeRepository(session)
 
-        if not repository.delete(email):
-            click.echo(f"Error: Employee with email {email} not found.")
-            return
+            # Get employee before deletion for logging
+            employee = repository.get_by_email(email)
+            if not employee:
+                click.echo(f"Error: Employee with email {email} not found.")
+                return
 
-        click.echo(f"Successfully deleted employee: {email}")
+            if not repository.delete(email):
+                click.echo(f"Error: Employee with email {email} not found.")
+                return
+
+            # Log employee deletion
+            log_employee_change(
+                "deleted",
+                {
+                    "employee_number": employee.employee_number,
+                    "full_name": employee.full_name,
+                    "department": employee.department.value,
+                    "role": employee.role,
+                },
+            )
+
+            click.echo(f"Successfully deleted employee: {email}")
+    except Exception as e:
+        log_exception(e, {"action": "delete_employee", "email": email})
+        click.echo(f"Error deleting employee: {str(e)}")
 
 
 @employee.command()

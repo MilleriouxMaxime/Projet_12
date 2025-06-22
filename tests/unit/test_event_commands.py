@@ -439,7 +439,11 @@ class TestEventCommands:
         mock_repo_class.return_value = mock_repository
         mock_contract_repo_class.return_value = mock_contract_repository
         mock_auth.return_value = mock_auth_service
+        mock_repository.get_all.return_value = []
         mock_repository.get_by_contract.return_value = []
+        mock_repository.get_by_client.return_value = []
+        mock_repository.get_by_support.return_value = []
+        mock_repository.get_without_support.return_value = []
 
         result = runner.invoke(event, ["list"])
 
