@@ -3,7 +3,7 @@ import click
 from auth import AuthService
 from database.connection import DatabaseConnection
 from logging_config import log_employee_change, log_exception
-from models import Department, Employee
+from models import Department
 from repositories.employee_repository import EmployeeRepository
 
 
@@ -68,7 +68,12 @@ def create(full_name, email, department, role, password):
 
 
 @employee.command()
-@click.argument("email")
+@click.option(
+    "--email",
+    prompt="Employee email",
+    required=True,
+    help="Email of the employee to update",
+)
 @click.option(
     "--full-name",
     prompt="New full name (press Enter to skip)",
@@ -77,7 +82,7 @@ def create(full_name, email, department, role, password):
 )
 @click.option(
     "--department",
-    type=click.Choice([d.value for d in Department]),
+    type=click.Choice([d.value for d in Department] + [""]),
     prompt="New department (press Enter to skip)",
     default="",
     help="New department",
@@ -98,7 +103,7 @@ def update(email, full_name, department, role, password):
         with DatabaseConnection.get_session() as session:
             repository = EmployeeRepository(session)
 
-            # Prepare update data
+            # Préparer les données de mise à jour
             update_data = {}
             if full_name.strip():
                 update_data["full_name"] = full_name
@@ -113,7 +118,7 @@ def update(email, full_name, department, role, password):
                 click.echo("Error: No update data provided")
                 return
 
-            # Update employee
+            # Mettre à jour l'employé
             employee = repository.update(email, **update_data)
 
             if not employee:
@@ -138,7 +143,12 @@ def update(email, full_name, department, role, password):
 
 
 @employee.command()
-@click.argument("email")
+@click.option(
+    "--email",
+    prompt="Employee email",
+    required=True,
+    help="Email of the employee to delete",
+)
 @click.confirmation_option(prompt="Are you sure you want to delete this employee?")
 def delete(email):
     """Delete an employee."""
