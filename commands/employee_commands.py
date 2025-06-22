@@ -1,6 +1,6 @@
 import click
 
-from auth import require_role
+from auth import AuthService
 from database.connection import DatabaseConnection
 from logging_config import log_employee_change, log_exception
 from models import Department, Employee
@@ -8,7 +8,6 @@ from repositories.employee_repository import EmployeeRepository
 
 
 @click.group()
-@require_role(Department.MANAGEMENT.value)
 def employee():
     """Employee management commands."""
     pass
@@ -177,6 +176,10 @@ def delete(email):
 @employee.command()
 def list():
     """List all employees."""
+    auth_service = AuthService()
+    if not auth_service.get_current_user():
+        click.echo("Error: Only authenticated users can list employees.")
+        return
     with DatabaseConnection.get_session() as session:
         repository = EmployeeRepository(session)
         employees = repository.get_all()
