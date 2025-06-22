@@ -1,9 +1,11 @@
 import click
+
 from auth import login, logout
-from commands.employee_commands import employee
-from commands.contract_commands import contract
 from commands.client_commands import client
+from commands.contract_commands import contract
+from commands.employee_commands import employee
 from commands.event_commands import event
+from logging_config import init_sentry
 
 
 @click.group()
@@ -30,4 +32,5 @@ cli.add_command(event)
 
 
 if __name__ == "__main__":
+    init_sentry()
     cli()
