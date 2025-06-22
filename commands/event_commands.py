@@ -1,11 +1,13 @@
-import click
 from datetime import datetime
-from database.connection import DatabaseConnection
-from repositories.event_repository import EventRepository
-from repositories.contract_repository import ContractRepository
-from models import Department
+
+import click
+
 from auth import AuthService
+from database.connection import DatabaseConnection
 from logging_config import log_exception
+from models import Department
+from repositories.contract_repository import ContractRepository
+from repositories.event_repository import EventRepository
 
 
 @click.group()
@@ -15,15 +17,37 @@ def event():
 
 
 @event.command()
-@click.option("--contract-id", required=True, type=int, help="Contract ID")
-@click.option("--client-id", required=True, type=int, help="Client ID")
-@click.option("--support-id", required=True, type=int, help="Support employee ID")
-@click.option("--name", required=True, help="Event name")
-@click.option("--start-date", required=True, help="Event start date (YYYY-MM-DD HH:MM)")
-@click.option("--end-date", required=True, help="Event end date (YYYY-MM-DD HH:MM)")
-@click.option("--location", help="Event location")
-@click.option("--attendees", type=int, help="Number of attendees")
-@click.option("--notes", help="Event notes")
+@click.option(
+    "--contract-id", prompt="Contract ID", required=True, type=int, help="Contract ID"
+)
+@click.option(
+    "--client-id", prompt="Client ID", required=True, type=int, help="Client ID"
+)
+@click.option(
+    "--support-id",
+    prompt="Support employee ID",
+    required=True,
+    type=int,
+    help="Support employee ID",
+)
+@click.option("--name", prompt="Event name", required=True, help="Event name")
+@click.option(
+    "--start-date",
+    prompt="Event start date (YYYY-MM-DD HH:MM)",
+    required=True,
+    help="Event start date (YYYY-MM-DD HH:MM)",
+)
+@click.option(
+    "--end-date",
+    prompt="Event end date (YYYY-MM-DD HH:MM)",
+    required=True,
+    help="Event end date (YYYY-MM-DD HH:MM)",
+)
+@click.option("--location", prompt="Event location", help="Event location")
+@click.option(
+    "--attendees", prompt="Number of attendees", type=int, help="Number of attendees"
+)
+@click.option("--notes", prompt="Event notes", help="Event notes")
 def create(
     contract_id: int,
     client_id: int,
@@ -125,20 +149,48 @@ def create(
 
 @event.command()
 @click.argument("event_id", type=int)
-@click.option("--name", help="New event name")
-@click.option("--start-date", help="New start date (YYYY-MM-DD HH:MM)")
-@click.option("--end-date", help="New end date (YYYY-MM-DD HH:MM)")
-@click.option("--location", help="New location")
-@click.option("--attendees", type=int, help="New number of attendees")
-@click.option("--notes", help="New notes")
+@click.option(
+    "--name",
+    prompt="New event name (press Enter to skip)",
+    default="",
+    help="New event name",
+)
+@click.option(
+    "--start-date",
+    prompt="New start date (YYYY-MM-DD HH:MM, press Enter to skip)",
+    default="",
+    help="New start date (YYYY-MM-DD HH:MM)",
+)
+@click.option(
+    "--end-date",
+    prompt="New end date (YYYY-MM-DD HH:MM, press Enter to skip)",
+    default="",
+    help="New end date (YYYY-MM-DD HH:MM)",
+)
+@click.option(
+    "--location",
+    prompt="New location (press Enter to skip)",
+    default="",
+    help="New location",
+)
+@click.option(
+    "--attendees",
+    prompt="New number of attendees (press Enter to skip)",
+    default="",
+    type=int,
+    help="New number of attendees",
+)
+@click.option(
+    "--notes", prompt="New notes (press Enter to skip)", default="", help="New notes"
+)
 def update(
     event_id: int,
-    name: str = None,
-    start_date: str = None,
-    end_date: str = None,
-    location: str = None,
-    attendees: int = None,
-    notes: str = None,
+    name: str = "",
+    start_date: str = "",
+    end_date: str = "",
+    location: str = "",
+    attendees: str = "",
+    notes: str = "",
 ):
     """Update an existing event."""
     try:
@@ -182,9 +234,9 @@ def update(
                     return
 
             update_data = {}
-            if name is not None:
+            if name.strip():
                 update_data["name"] = name
-            if start_date is not None:
+            if start_date.strip():
                 try:
                     update_data["start_date"] = datetime.strptime(
                         start_date, "%Y-%m-%d %H:%M"
@@ -192,7 +244,7 @@ def update(
                 except ValueError:
                     click.echo("Error: Invalid start date format. Use YYYY-MM-DD HH:MM")
                     return
-            if end_date is not None:
+            if end_date.strip():
                 try:
                     update_data["end_date"] = datetime.strptime(
                         end_date, "%Y-%m-%d %H:%M"
@@ -200,11 +252,15 @@ def update(
                 except ValueError:
                     click.echo("Error: Invalid end date format. Use YYYY-MM-DD HH:MM")
                     return
-            if location is not None:
+            if location.strip():
                 update_data["location"] = location
-            if attendees is not None:
-                update_data["attendees"] = attendees
-            if notes is not None:
+            if attendees.strip():
+                try:
+                    update_data["attendees"] = int(attendees)
+                except ValueError:
+                    click.echo("Error: Invalid attendees number")
+                    return
+            if notes.strip():
                 update_data["notes"] = notes
 
             if not update_data:

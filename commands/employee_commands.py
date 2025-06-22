@@ -70,28 +70,52 @@ def create(full_name, email, department, role, password):
 
 @employee.command()
 @click.argument("email")
-@click.option("--full-name", help="New full name")
+@click.option(
+    "--full-name",
+    prompt="New full name (press Enter to skip)",
+    default="",
+    help="New full name",
+)
 @click.option(
     "--department",
     type=click.Choice([d.value for d in Department]),
+    prompt="New department (press Enter to skip)",
+    default="",
     help="New department",
 )
-@click.option("--role", help="New role")
-@click.option("--password", help="New password", hide_input=True)
+@click.option(
+    "--role", prompt="New role (press Enter to skip)", default="", help="New role"
+)
+@click.option(
+    "--password",
+    prompt="New password (press Enter to skip)",
+    default="",
+    help="New password",
+    hide_input=True,
+)
 def update(email, full_name, department, role, password):
     """Update an existing employee."""
     try:
         with DatabaseConnection.get_session() as session:
             repository = EmployeeRepository(session)
 
+            # Prepare update data
+            update_data = {}
+            if full_name.strip():
+                update_data["full_name"] = full_name
+            if department.strip():
+                update_data["department"] = department
+            if role.strip():
+                update_data["role"] = role
+            if password.strip():
+                update_data["password"] = password
+
+            if not update_data:
+                click.echo("Error: No update data provided")
+                return
+
             # Update employee
-            employee = repository.update(
-                email,
-                full_name=full_name,
-                department=department,
-                role=role,
-                password=password,
-            )
+            employee = repository.update(email, **update_data)
 
             if not employee:
                 click.echo(f"Error: Employee with email {email} not found.")

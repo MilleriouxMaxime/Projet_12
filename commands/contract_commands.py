@@ -1,10 +1,12 @@
-import click
 from decimal import Decimal
-from database.connection import DatabaseConnection
-from repositories.contract_repository import ContractRepository
-from models import Department
+
+import click
+
 from auth import AuthService
+from database.connection import DatabaseConnection
 from logging_config import log_contract_signature, log_exception
+from models import Department
+from repositories.contract_repository import ContractRepository
 
 
 @click.group()
@@ -14,11 +16,29 @@ def contract():
 
 
 @contract.command()
-@click.option("--client-id", required=True, type=int, help="Client ID")
-@click.option("--commercial-id", required=True, type=int, help="Commercial employee ID")
-@click.option("--total-amount", required=True, type=float, help="Total contract amount")
 @click.option(
-    "--remaining-amount", required=True, type=float, help="Remaining amount to be paid"
+    "--client-id", prompt="Client ID", required=True, type=int, help="Client ID"
+)
+@click.option(
+    "--commercial-id",
+    prompt="Commercial employee ID",
+    required=True,
+    type=int,
+    help="Commercial employee ID",
+)
+@click.option(
+    "--total-amount",
+    prompt="Total contract amount",
+    required=True,
+    type=float,
+    help="Total contract amount",
+)
+@click.option(
+    "--remaining-amount",
+    prompt="Remaining amount to be paid",
+    required=True,
+    type=float,
+    help="Remaining amount to be paid",
 )
 def create(
     client_id: int, commercial_id: int, total_amount: float, remaining_amount: float
@@ -71,14 +91,32 @@ def create(
 
 @contract.command()
 @click.argument("contract_id", type=int)
-@click.option("--total-amount", type=float, help="New total amount")
-@click.option("--remaining-amount", type=float, help="New remaining amount")
-@click.option("--is-signed", type=bool, help="Contract signed status")
+@click.option(
+    "--total-amount",
+    prompt="New total amount (press Enter to skip)",
+    default="",
+    type=float,
+    help="New total amount",
+)
+@click.option(
+    "--remaining-amount",
+    prompt="New remaining amount (press Enter to skip)",
+    default="",
+    type=float,
+    help="New remaining amount",
+)
+@click.option(
+    "--is-signed",
+    prompt="Contract signed status (true/false, press Enter to skip)",
+    default="",
+    type=bool,
+    help="Contract signed status",
+)
 def update(
     contract_id: int,
-    total_amount: float = None,
-    remaining_amount: float = None,
-    is_signed: bool = None,
+    total_amount: str = "",
+    remaining_amount: str = "",
+    is_signed: str = "",
 ):
     """Update an existing contract."""
     try:
@@ -116,12 +154,28 @@ def update(
                 return
 
             update_data = {}
-            if total_amount is not None:
-                update_data["total_amount"] = Decimal(str(total_amount))
-            if remaining_amount is not None:
-                update_data["remaining_amount"] = Decimal(str(remaining_amount))
-            if is_signed is not None:
-                update_data["is_signed"] = is_signed
+            if total_amount.strip():
+                try:
+                    update_data["total_amount"] = Decimal(str(total_amount))
+                except ValueError:
+                    click.echo("Error: Invalid total amount format")
+                    return
+            if remaining_amount.strip():
+                try:
+                    update_data["remaining_amount"] = Decimal(str(remaining_amount))
+                except ValueError:
+                    click.echo("Error: Invalid remaining amount format")
+                    return
+            if is_signed.strip():
+                if is_signed.lower() in ["true", "1", "yes"]:
+                    update_data["is_signed"] = True
+                elif is_signed.lower() in ["false", "0", "no"]:
+                    update_data["is_signed"] = False
+                else:
+                    click.echo(
+                        "Error: Invalid signed status. Use true/false, yes/no, or 1/0"
+                    )
+                    return
 
             if not update_data:
                 click.echo("Error: No update data provided")
@@ -130,7 +184,11 @@ def update(
             updated_contract = repo.update(contract_id, update_data)
 
             # Log contract signature if the contract was just signed
-            if is_signed and not contract.is_signed:
+            if (
+                "is_signed" in update_data
+                and update_data["is_signed"]
+                and not contract.is_signed
+            ):
                 log_contract_signature(
                     {
                         "id": updated_contract.id,
