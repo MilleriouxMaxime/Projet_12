@@ -3,6 +3,7 @@ from auth import login, logout
 from commands.employee_commands import employee
 from commands.contract_commands import contract
 from commands.client_commands import client
+from commands.event_commands import event
 
 
 @click.group()
@@ -23,6 +24,9 @@ cli.add_command(contract)
 
 # Client management commands (only for commercial users)
 cli.add_command(client)
+
+# Event management commands (for commercial and management users)
+cli.add_command(event)
 
 
 if __name__ == "__main__":
