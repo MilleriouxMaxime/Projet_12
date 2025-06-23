@@ -239,6 +239,12 @@ class TestEventCommands:
                 "2024-03-20 10:00",
                 "--end-date",
                 "2024-03-20 12:00",
+                "--location",
+                "Test Location",
+                "--attendees",
+                "10",
+                "--notes",
+                "Test Notes",
             ],
         )
 
@@ -296,6 +302,12 @@ class TestEventCommands:
                 "2024-03-20 10:00",
                 "--end-date",
                 "2024-03-20 12:00",
+                "--location",
+                "Test Location",
+                "--attendees",
+                "10",
+                "--notes",
+                "Test Notes",
             ],
         )
 
@@ -329,6 +341,7 @@ class TestEventCommands:
             event,
             [
                 "update",
+                "--event-id",
                 "1",
                 "--name",
                 "Updated Event",
@@ -376,7 +389,9 @@ class TestEventCommands:
             created_at=datetime.now(UTC),
         )
 
-        result = runner.invoke(event, ["update", "1", "--name", "Updated Event"])
+        result = runner.invoke(
+            event, ["update", "--event-id", "1", "--name", "Updated Event"]
+        )
 
         assert result.exit_code == 0
         assert (

@@ -214,12 +214,25 @@ class TestContractCommands:
         """Test successful contract update."""
         mock_get_session.return_value.__enter__.return_value = mock_session
         mock_repo_class.return_value = mock_repository
-        mock_auth.return_value.has_permission.return_value = True
+
+        # Mock AuthService to return a current user
+        mock_auth_instance = Mock()
+        mock_auth_instance.has_permission.return_value = True
+        mock_auth_instance.get_current_user.return_value = Employee(
+            id=1,
+            employee_number="EMP001",
+            full_name="Test Commercial",
+            email="commercial@example.com",
+            department=Department.COMMERCIAL,
+            role="Sales",
+        )
+        mock_auth.return_value = mock_auth_instance
 
         result = runner.invoke(
             contract,
             [
                 "update",
+                "--contract-id",
                 "1",
                 "--total-amount",
                 "2000.00",
@@ -252,7 +265,20 @@ class TestContractCommands:
         mock_auth.return_value.has_permission.return_value = True
         mock_repository.get_by_id.return_value = None
 
-        result = runner.invoke(contract, ["update", "999", "--total-amount", "2000.00"])
+        result = runner.invoke(
+            contract,
+            [
+                "update",
+                "--contract-id",
+                "999",
+                "--total-amount",
+                "2000.00",
+                "--remaining-amount",
+                "1000.00",
+                "--is-signed",
+                "false",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "Error: Contract with ID 999 not found" in result.output
@@ -332,6 +358,7 @@ class TestContractCommands:
             contract,
             [
                 "update",
+                "--contract-id",
                 "1",
                 "--total-amount",
                 "2000.00",
@@ -373,7 +400,20 @@ class TestContractCommands:
             created_at=datetime.now(UTC),
         )
 
-        result = runner.invoke(contract, ["update", "1", "--total-amount", "2000.00"])
+        result = runner.invoke(
+            contract,
+            [
+                "update",
+                "--contract-id",
+                "1",
+                "--total-amount",
+                "2000.00",
+                "--remaining-amount",
+                "1000.00",
+                "--is-signed",
+                "false",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "Error: You can only update contracts assigned to you" in result.output

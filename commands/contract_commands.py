@@ -30,18 +30,16 @@ def contract():
     "--total-amount",
     prompt="Total contract amount",
     required=True,
-    type=float,
     help="Total contract amount",
 )
 @click.option(
     "--remaining-amount",
     prompt="Remaining amount to be paid",
     required=True,
-    type=float,
     help="Remaining amount to be paid",
 )
 def create(
-    client_id: int, commercial_id: int, total_amount: float, remaining_amount: float
+    client_id: int, commercial_id: int, total_amount: str, remaining_amount: str
 ):
     """Create a new contract."""
     try:
@@ -70,8 +68,8 @@ def create(
             contract_data = {
                 "client_id": client_id,
                 "commercial_id": commercial_id,
-                "total_amount": Decimal(str(total_amount)),
-                "remaining_amount": Decimal(str(remaining_amount)),
+                "total_amount": Decimal(total_amount),
+                "remaining_amount": Decimal(remaining_amount),
                 "is_signed": False,
             }
 
@@ -90,26 +88,29 @@ def create(
 
 
 @contract.command()
-@click.argument("contract_id", type=int)
+@click.option(
+    "--contract-id",
+    prompt="Contract ID",
+    required=True,
+    type=int,
+    help="Contract ID of the contract to update",
+)
 @click.option(
     "--total-amount",
     prompt="New total amount (press Enter to skip)",
     default="",
-    type=float,
     help="New total amount",
 )
 @click.option(
     "--remaining-amount",
     prompt="New remaining amount (press Enter to skip)",
     default="",
-    type=float,
     help="New remaining amount",
 )
 @click.option(
     "--is-signed",
     prompt="Contract signed status (true/false, press Enter to skip)",
     default="",
-    type=bool,
     help="Contract signed status",
 )
 def update(

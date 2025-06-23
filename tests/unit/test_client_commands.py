@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from click.testing import CliRunner
 from commands.client_commands import client
 from models import Department, Client, Employee
@@ -134,14 +134,22 @@ class TestClientCommands:
         mock_auth_service,
     ):
         """Test client creation with unauthorized user."""
-        mock_get_session.return_value.__enter__.return_value = mock_session
-        mock_repo_class.return_value = mock_repository
         mock_auth_service.has_permission.return_value = False
         mock_auth.return_value = mock_auth_service
 
         result = runner.invoke(
             client,
-            ["create", "--full-name", "Test Client", "--email", "test@example.com"],
+            [
+                "create",
+                "--full-name",
+                "Test Client",
+                "--email",
+                "test@example.com",
+                "--phone",
+                "1234567890",
+                "--company-name",
+                "Test Company",
+            ],
         )
 
         assert result.exit_code == 0
@@ -171,7 +179,17 @@ class TestClientCommands:
 
         result = runner.invoke(
             client,
-            ["create", "--full-name", "Test Client", "--email", "test@example.com"],
+            [
+                "create",
+                "--full-name",
+                "Test Client",
+                "--email",
+                "test@example.com",
+                "--phone",
+                "1234567890",
+                "--company-name",
+                "Test Company",
+            ],
         )
 
         assert result.exit_code == 0
@@ -202,6 +220,7 @@ class TestClientCommands:
             client,
             [
                 "update",
+                "--client-id",
                 "1",
                 "--full-name",
                 "Updated Client",
@@ -236,7 +255,14 @@ class TestClientCommands:
         mock_repository.get_by_id.return_value = None
 
         result = runner.invoke(
-            client, ["update", "999", "--full-name", "Updated Client"]
+            client,
+            [
+                "update",
+                "--client-id",
+                "999",
+                "--full-name",
+                "Updated Client",
+            ],
         )
 
         assert result.exit_code == 0
@@ -267,7 +293,16 @@ class TestClientCommands:
             commercial_id=2,  # Different from current user's ID
         )
 
-        result = runner.invoke(client, ["update", "1", "--full-name", "Updated Client"])
+        result = runner.invoke(
+            client,
+            [
+                "update",
+                "--client-id",
+                "1",
+                "--full-name",
+                "Updated Client",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "Error: You can only update clients assigned to you" in result.output

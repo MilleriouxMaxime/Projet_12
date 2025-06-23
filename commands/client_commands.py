@@ -59,7 +59,13 @@ def create(full_name: str, email: str, phone: str = None, company_name: str = No
 
 
 @client.command()
-@click.argument("client_id", type=int)
+@click.option(
+    "--client-id",
+    prompt="Client ID",
+    required=True,
+    type=int,
+    help="Client ID of the client to update",
+)
 @click.option(
     "--full-name",
     prompt="New full name (press Enter to skip)",

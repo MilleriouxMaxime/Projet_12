@@ -69,8 +69,19 @@ class TestEmployeeCommands:
 
         result = runner.invoke(
             employee,
-            ["create"],
-            input="Test User\ntest@example.com\ncommercial\nTest Role\nPassword123!\nPassword123!\n",
+            [
+                "create",
+                "--full-name",
+                "Test User",
+                "--email",
+                "test@example.com",
+                "--department",
+                "commercial",
+                "--role",
+                "Test Role",
+                "--password",
+                "Password123!",
+            ],
         )
 
         assert result.exit_code == 0
@@ -96,8 +107,19 @@ class TestEmployeeCommands:
 
         result = runner.invoke(
             employee,
-            ["create"],
-            input="Test User\ntest@example.com\ncommercial\nTest Role\nPassword123!\nPassword123!\n",
+            [
+                "create",
+                "--full-name",
+                "Test User",
+                "--email",
+                "test@example.com",
+                "--department",
+                "commercial",
+                "--role",
+                "Test Role",
+                "--password",
+                "Password123!",
+            ],
         )
 
         assert result.exit_code == 0
@@ -117,7 +139,14 @@ class TestEmployeeCommands:
         mock_repo_class.return_value = mock_repository
 
         result = runner.invoke(
-            employee, ["update", "test@example.com", "--full-name", "Updated User"]
+            employee,
+            [
+                "update",
+                "--email",
+                "test@example.com",
+                "--full-name",
+                "Updated User",
+            ],
         )
 
         assert result.exit_code == 0
@@ -136,7 +165,13 @@ class TestEmployeeCommands:
 
         result = runner.invoke(
             employee,
-            ["update", "nonexistent@example.com", "--full-name", "Updated User"],
+            [
+                "update",
+                "--email",
+                "nonexistent@example.com",
+                "--full-name",
+                "Updated User",
+            ],
         )
 
         assert result.exit_code == 0
@@ -156,7 +191,13 @@ class TestEmployeeCommands:
         mock_repository.delete.return_value = False
 
         result = runner.invoke(
-            employee, ["delete", "nonexistent@example.com"], input="y\n"
+            employee,
+            [
+                "delete",
+                "--email",
+                "nonexistent@example.com",
+            ],
+            input="y\n",
         )
 
         assert result.exit_code == 0
@@ -167,12 +208,31 @@ class TestEmployeeCommands:
 
     @patch("commands.employee_commands.DatabaseConnection.get_session")
     @patch("commands.employee_commands.EmployeeRepository")
+    @patch("commands.employee_commands.AuthService")
     def test_list_employees_success(
-        self, mock_repo_class, mock_get_session, runner, mock_repository, mock_session
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
     ):
         """Test successful employee listing."""
         mock_get_session.return_value.__enter__.return_value = mock_session
         mock_repo_class.return_value = mock_repository
+
+        # Mock AuthService to return a current user
+        mock_auth_instance = Mock()
+        mock_auth_instance.get_current_user.return_value = Employee(
+            employee_number="EMP001",
+            full_name="Test User",
+            email="test@example.com",
+            department=Department.COMMERCIAL,
+            role="Test Role",
+            created_at=datetime.now(UTC),
+        )
+        mock_auth.return_value = mock_auth_instance
 
         result = runner.invoke(employee, ["list"])
 
@@ -186,13 +246,32 @@ class TestEmployeeCommands:
 
     @patch("commands.employee_commands.DatabaseConnection.get_session")
     @patch("commands.employee_commands.EmployeeRepository")
+    @patch("commands.employee_commands.AuthService")
     def test_list_employees_empty(
-        self, mock_repo_class, mock_get_session, runner, mock_repository, mock_session
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
     ):
         """Test employee listing with no employees."""
         mock_get_session.return_value.__enter__.return_value = mock_session
         mock_repo_class.return_value = mock_repository
         mock_repository.get_all.return_value = []
+
+        # Mock AuthService to return a current user
+        mock_auth_instance = Mock()
+        mock_auth_instance.get_current_user.return_value = Employee(
+            employee_number="EMP001",
+            full_name="Test User",
+            email="test@example.com",
+            department=Department.COMMERCIAL,
+            role="Test Role",
+            created_at=datetime.now(UTC),
+        )
+        mock_auth.return_value = mock_auth_instance
 
         result = runner.invoke(employee, ["list"])
 

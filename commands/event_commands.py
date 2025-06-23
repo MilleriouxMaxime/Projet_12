@@ -44,9 +44,7 @@ def event():
     help="Event end date (YYYY-MM-DD HH:MM)",
 )
 @click.option("--location", prompt="Event location", help="Event location")
-@click.option(
-    "--attendees", prompt="Number of attendees", type=int, help="Number of attendees"
-)
+@click.option("--attendees", prompt="Number of attendees", help="Number of attendees")
 @click.option("--notes", prompt="Event notes", help="Event notes")
 def create(
     contract_id: int,
@@ -148,7 +146,13 @@ def create(
 
 
 @event.command()
-@click.argument("event_id", type=int)
+@click.option(
+    "--event-id",
+    prompt="Event ID",
+    required=True,
+    type=int,
+    help="Event ID of the event to update",
+)
 @click.option(
     "--name",
     prompt="New event name (press Enter to skip)",
@@ -177,7 +181,6 @@ def create(
     "--attendees",
     prompt="New number of attendees (press Enter to skip)",
     default="",
-    type=int,
     help="New number of attendees",
 )
 @click.option(
