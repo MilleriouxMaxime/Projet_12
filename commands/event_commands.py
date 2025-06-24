@@ -186,6 +186,12 @@ def create(
 @click.option(
     "--notes", prompt="New notes (press Enter to skip)", default="", help="New notes"
 )
+@click.option(
+    "--support-id",
+    prompt="New support employee ID (press Enter to skip)",
+    default="",
+    help="New support employee ID",
+)
 def update(
     event_id: int,
     name: str = "",
@@ -194,6 +200,7 @@ def update(
     location: str = "",
     attendees: str = "",
     notes: str = "",
+    support_id: str = "",
 ):
     """Update an existing event."""
     try:
@@ -265,6 +272,32 @@ def update(
                     return
             if notes.strip():
                 update_data["notes"] = notes
+
+            # Handle support_id update (only for management users)
+            if support_id.strip():
+                if current_user.department != Department.MANAGEMENT:
+                    click.echo(
+                        "Error: Only management users can update support assignment"
+                    )
+                    return
+
+                try:
+                    support_id_int = int(support_id)
+                    # Verify support employee exists and is from support department
+                    support_employee = repo.get_support(support_id_int)
+                    if not support_employee:
+                        click.echo(
+                            f"Error: Support employee with ID {support_id_int} not found"
+                        )
+                        return
+                    if support_employee.department != Department.SUPPORT:
+                        click.echo("Error: Employee must be from support department")
+                        return
+
+                    update_data["support_id"] = support_id_int
+                except ValueError:
+                    click.echo("Error: Invalid support ID format")
+                    return
 
             if not update_data:
                 click.echo("Error: No update data provided")

@@ -199,7 +199,8 @@ def list():
             return
 
         for emp in employees:
-            click.echo(f"\nEmployee: {emp.full_name}")
+            click.echo(f"\nEmployee ID: {emp.id}")
+            click.echo(f"Employee: {emp.full_name}")
             click.echo(f"Email: {emp.email}")
             click.echo(f"Department: {emp.department.value}")
             click.echo(f"Role: {emp.role}")

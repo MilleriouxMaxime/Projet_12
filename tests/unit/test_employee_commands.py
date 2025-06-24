@@ -225,6 +225,7 @@ class TestEmployeeCommands:
         # Mock AuthService to return a current user
         mock_auth_instance = Mock()
         mock_auth_instance.get_current_user.return_value = Employee(
+            id=1,
             employee_number="EMP001",
             full_name="Test User",
             email="test@example.com",
@@ -237,6 +238,7 @@ class TestEmployeeCommands:
         result = runner.invoke(employee, ["list"])
 
         assert result.exit_code == 0
+        assert "Employee ID: 1" in result.output
         assert "Employee: Test User" in result.output
         assert "Email: test@example.com" in result.output
         assert "Department: commercial" in result.output
