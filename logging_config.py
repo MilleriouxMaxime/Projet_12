@@ -26,14 +26,15 @@ def init_sentry():
 
 
 def log_employee_change(action, employee_data):
-    with sentry_sdk.push_scope() as scope:
-        scope.set_extra("employee_number", employee_data.get("employee_number"))
-        scope.set_extra("department", employee_data.get("department"))
-        scope.set_extra("action", action)
-        sentry_sdk.capture_message(
-            f"Employee {action}: {employee_data.get('full_name', 'Unknown')}",
-            level="info",
-        )
+    sentry_sdk.capture_message(
+        f"Employee {action}: {employee_data.get('full_name', 'Unknown')}",
+        level="info",
+        extras={
+            "employee_number": employee_data.get("employee_number"),
+            "department": employee_data.get("department"),
+            "action": action,
+        },
+    )
 
 
 def log_contract_signature(contract_data):

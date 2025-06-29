@@ -20,6 +20,7 @@ def mock_repository(mock_session):
     repository = Mock()
     repository.get_by_email.return_value = None
     repository.create.return_value = Employee(
+        id=1,
         employee_number="TEST123",
         full_name="Test User",
         email="test@example.com",
@@ -28,6 +29,7 @@ def mock_repository(mock_session):
         created_at=datetime.now(UTC),
     )
     repository.update.return_value = Employee(
+        id=1,
         employee_number="TEST123",
         full_name="Updated User",
         email="test@example.com",
@@ -38,6 +40,7 @@ def mock_repository(mock_session):
     repository.delete.return_value = True
     repository.get_all.return_value = [
         Employee(
+            id=1,
             employee_number="TEST123",
             full_name="Test User",
             email="test@example.com",
@@ -60,12 +63,24 @@ class TestEmployeeCommands:
 
     @patch("commands.employee_commands.DatabaseConnection.get_session")
     @patch("commands.employee_commands.EmployeeRepository")
+    @patch("commands.employee_commands.AuthService")
     def test_create_employee_success(
-        self, mock_repo_class, mock_get_session, runner, mock_repository, mock_session
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
     ):
         """Test successful employee creation."""
         mock_get_session.return_value.__enter__.return_value = mock_session
         mock_repo_class.return_value = mock_repository
+
+        # Mock AuthService to return management permissions
+        mock_auth_instance = Mock()
+        mock_auth_instance.has_permission.return_value = True
+        mock_auth.return_value = mock_auth_instance
 
         result = runner.invoke(
             employee,
@@ -90,8 +105,57 @@ class TestEmployeeCommands:
 
     @patch("commands.employee_commands.DatabaseConnection.get_session")
     @patch("commands.employee_commands.EmployeeRepository")
+    @patch("commands.employee_commands.AuthService")
+    def test_create_employee_unauthorized(
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
+    ):
+        """Test employee creation with unauthorized user."""
+        mock_get_session.return_value.__enter__.return_value = mock_session
+        mock_repo_class.return_value = mock_repository
+
+        # Mock AuthService to return no management permissions
+        mock_auth_instance = Mock()
+        mock_auth_instance.has_permission.return_value = False
+        mock_auth.return_value = mock_auth_instance
+
+        result = runner.invoke(
+            employee,
+            [
+                "create",
+                "--full-name",
+                "Test User",
+                "--email",
+                "test@example.com",
+                "--department",
+                "commercial",
+                "--role",
+                "Test Role",
+                "--password",
+                "Password123!",
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Error: Only management users can create employees" in result.output
+        mock_repository.create.assert_not_called()
+
+    @patch("commands.employee_commands.DatabaseConnection.get_session")
+    @patch("commands.employee_commands.EmployeeRepository")
+    @patch("commands.employee_commands.AuthService")
     def test_create_employee_duplicate_email(
-        self, mock_repo_class, mock_get_session, runner, mock_repository, mock_session
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
     ):
         """Test employee creation with duplicate email."""
         mock_get_session.return_value.__enter__.return_value = mock_session
@@ -104,6 +168,11 @@ class TestEmployeeCommands:
             role="Existing Role",
             created_at=datetime.now(UTC),
         )
+
+        # Mock AuthService to return management permissions
+        mock_auth_instance = Mock()
+        mock_auth_instance.has_permission.return_value = True
+        mock_auth.return_value = mock_auth_instance
 
         result = runner.invoke(
             employee,
@@ -131,12 +200,24 @@ class TestEmployeeCommands:
 
     @patch("commands.employee_commands.DatabaseConnection.get_session")
     @patch("commands.employee_commands.EmployeeRepository")
+    @patch("commands.employee_commands.AuthService")
     def test_update_employee_success(
-        self, mock_repo_class, mock_get_session, runner, mock_repository, mock_session
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
     ):
         """Test successful employee update."""
         mock_get_session.return_value.__enter__.return_value = mock_session
         mock_repo_class.return_value = mock_repository
+
+        # Mock AuthService to return management permissions
+        mock_auth_instance = Mock()
+        mock_auth_instance.has_permission.return_value = True
+        mock_auth.return_value = mock_auth_instance
 
         result = runner.invoke(
             employee,
@@ -155,13 +236,25 @@ class TestEmployeeCommands:
 
     @patch("commands.employee_commands.DatabaseConnection.get_session")
     @patch("commands.employee_commands.EmployeeRepository")
+    @patch("commands.employee_commands.AuthService")
     def test_update_employee_not_found(
-        self, mock_repo_class, mock_get_session, runner, mock_repository, mock_session
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
     ):
         """Test employee update with non-existent email."""
         mock_get_session.return_value.__enter__.return_value = mock_session
         mock_repo_class.return_value = mock_repository
         mock_repository.update.return_value = None
+
+        # Mock AuthService to return management permissions
+        mock_auth_instance = Mock()
+        mock_auth_instance.has_permission.return_value = True
+        mock_auth.return_value = mock_auth_instance
 
         result = runner.invoke(
             employee,
@@ -182,13 +275,25 @@ class TestEmployeeCommands:
 
     @patch("commands.employee_commands.DatabaseConnection.get_session")
     @patch("commands.employee_commands.EmployeeRepository")
+    @patch("commands.employee_commands.AuthService")
     def test_delete_employee_not_found(
-        self, mock_repo_class, mock_get_session, runner, mock_repository, mock_session
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
     ):
         """Test employee deletion with non-existent email."""
         mock_get_session.return_value.__enter__.return_value = mock_session
         mock_repo_class.return_value = mock_repository
         mock_repository.delete.return_value = False
+
+        # Mock AuthService to return management permissions
+        mock_auth_instance = Mock()
+        mock_auth_instance.has_permission.return_value = True
+        mock_auth.return_value = mock_auth_instance
 
         result = runner.invoke(
             employee,

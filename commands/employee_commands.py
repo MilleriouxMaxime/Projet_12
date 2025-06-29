@@ -33,6 +33,11 @@ def employee():
 def create(full_name, email, department, role, password):
     """Create a new employee."""
     try:
+        auth_service = AuthService()
+        if not auth_service.has_permission(Department.MANAGEMENT):
+            click.echo("Error: Only management users can create employees")
+            return
+
         with DatabaseConnection.get_session() as session:
             repository = EmployeeRepository(session)
 
@@ -100,6 +105,11 @@ def create(full_name, email, department, role, password):
 def update(email, full_name, department, role, password):
     """Update an existing employee."""
     try:
+        auth_service = AuthService()
+        if not auth_service.has_permission(Department.MANAGEMENT):
+            click.echo("Error: Only management users can update employees")
+            return
+
         with DatabaseConnection.get_session() as session:
             repository = EmployeeRepository(session)
 
@@ -153,6 +163,11 @@ def update(email, full_name, department, role, password):
 def delete(email):
     """Delete an employee."""
     try:
+        auth_service = AuthService()
+        if not auth_service.has_permission(Department.MANAGEMENT):
+            click.echo("Error: Only management users can delete employees")
+            return
+
         with DatabaseConnection.get_session() as session:
             repository = EmployeeRepository(session)
 
