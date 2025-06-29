@@ -1,6 +1,6 @@
+import os
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-import os
 
 import jwt
 
@@ -102,10 +102,6 @@ class AuthService:
         current_user = self.get_current_user()
         if not current_user:
             return False
-
-        # Management has access to everything
-        if current_user.department == Department.MANAGEMENT:
-            return True
 
         # Check if user's department matches required department
         return current_user.department == required_department
