@@ -1,5 +1,6 @@
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+import os
 
 import jwt
 
@@ -10,7 +11,7 @@ from repositories.employee_repository import EmployeeRepository
 
 class AuthService:
     def __init__(self):
-        self.jwt_secret = "your-secret-key"  # Should be in environment variables
+        self.jwt_secret = os.getenv("JWT_SECRET")  # Get from environment variable
         self.jwt_algorithm = "HS256"
         self.token_expiry = timedelta(days=1)
         self.token_file = Path.home() / ".epicevents_token"
