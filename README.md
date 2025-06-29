@@ -13,19 +13,19 @@ This project uses **SQLite** as the default database.
 
 2. **Initialize the database**:
    ```bash
-   python init_db.py
+   python utils/init_db.py
    ```
    *Creates the database structure and all necessary tables (employees, clients, contracts, events)*
 
 3. **Seed the database with sample data**:
    ```bash
-   python seed_db.py
+   python utils/seed_db.py
    ```
    *Populates the database with sample employees across all departments (Commercial, Support, Management) for testing*
 
 4. **Seed the database with sample business data**:
    ```bash
-   python seed_events.py
+   python utils/seed_events.py
    ```
    *Creates sample clients, contracts, and events for comprehensive testing of the CRM functionality*
 
