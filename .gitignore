@@ -51,3 +51,5 @@ logs/
 Thumbs.db 
 
 docs/
+
+.coverage
