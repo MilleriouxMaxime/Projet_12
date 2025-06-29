@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 from click.testing import CliRunner
 from commands.contract_commands import contract
-from models import Department, Contract, Client, Employee
+from models.models import Department, Contract, Client, Employee
 from decimal import Decimal
 from datetime import datetime, UTC
 

@@ -1,11 +1,11 @@
 from datetime import UTC, datetime
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from click.testing import CliRunner
 
 from commands.employee_commands import employee
-from models import Department, Employee
+from models.models import Department, Employee
 
 
 @pytest.fixture

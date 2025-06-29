@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models import Contract, Client, Employee
+from models.models import Contract, Client, Employee
 from typing import List, Optional
 from decimal import Decimal
 

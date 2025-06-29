@@ -1,5 +1,5 @@
 import pytest
-from models import Employee, Department
+from models.models import Employee, Department
 from werkzeug.security import check_password_hash
 
 

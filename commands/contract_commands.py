@@ -5,7 +5,7 @@ import click
 from auth import AuthService
 from database.connection import DatabaseConnection
 from logging_config import log_contract_signature, log_exception
-from models import Department
+from models.models import Department
 from repositories.contract_repository import ContractRepository
 
 

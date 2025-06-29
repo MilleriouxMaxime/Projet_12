@@ -2,7 +2,7 @@ import click
 
 from auth import AuthService
 from database.connection import DatabaseConnection
-from models import Department
+from models.models import Department
 from repositories.client_repository import ClientRepository
 
 

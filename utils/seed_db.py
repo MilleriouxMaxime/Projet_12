@@ -1,5 +1,5 @@
 from database.connection import DatabaseConnection
-from models import Employee, Department
+from models.models import Employee, Department
 from datetime import datetime, UTC
 import random
 import string

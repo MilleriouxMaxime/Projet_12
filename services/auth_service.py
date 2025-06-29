@@ -5,7 +5,7 @@ import os
 import jwt
 
 from database.connection import DatabaseConnection
-from models import Department, Employee
+from models.models import Department, Employee
 from repositories.employee_repository import EmployeeRepository
 
 

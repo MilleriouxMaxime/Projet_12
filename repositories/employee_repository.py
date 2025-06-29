@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
-from models import Department, Employee
+from models.models import Department, Employee
 
 
 class EmployeeRepository:

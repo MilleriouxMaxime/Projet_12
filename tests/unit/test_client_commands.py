@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import Mock, patch
 from click.testing import CliRunner
 from commands.client_commands import client
-from models import Department, Client, Employee
+from models.models import Department, Client, Employee
 from datetime import datetime, UTC
 
 

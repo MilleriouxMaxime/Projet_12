@@ -1,5 +1,5 @@
 from database.connection import DatabaseConnection
-from models import Base
+from models.models import Base
 from sqlalchemy import text
 import time
 
@@ -35,9 +35,7 @@ def init_db():
 
     # Verify tables were created (SQLite compatible)
     with engine.connect() as conn:
-        result = conn.execute(
-            text("SELECT name FROM sqlite_master WHERE type='table'")
-        )
+        result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
         tables = [row[0] for row in result]
         print("\nCreated tables:")
         for table in sorted(tables):

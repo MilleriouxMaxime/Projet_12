@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 from click.testing import CliRunner
 from commands.event_commands import event
-from models import Department, Event, Contract, Client, Employee
+from models.models import Department, Event, Contract, Client, Employee
 from datetime import datetime, UTC
 
 

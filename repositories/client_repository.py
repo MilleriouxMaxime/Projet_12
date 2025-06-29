@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models import Client, Employee
+from models.models import Client, Employee
 from typing import List, Optional
 
 

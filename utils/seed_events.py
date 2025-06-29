@@ -5,7 +5,7 @@ Creates sample clients, contracts, and events for testing
 """
 
 from database.connection import DatabaseConnection
-from models import Employee, Client, Contract, Event, Department
+from models.models import Employee, Client, Contract, Event, Department
 from datetime import datetime, UTC, timedelta
 import random
 import string
