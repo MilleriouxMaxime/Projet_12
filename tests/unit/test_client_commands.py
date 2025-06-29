@@ -16,7 +16,19 @@ def mock_session():
 def mock_repository(mock_session):
     """Create a mock client repository."""
     repository = Mock()
-    repository.get_by_id.return_value = Client(
+
+    # Create a mock commercial employee
+    commercial_employee = Employee(
+        id=1,
+        employee_number="EMP001",
+        full_name="Test Commercial",
+        email="commercial@example.com",
+        department=Department.COMMERCIAL,
+        role="Sales",
+    )
+
+    # Create client with commercial relationship
+    test_client = Client(
         id=1,
         full_name="Test Client",
         email="test@example.com",
@@ -25,16 +37,11 @@ def mock_repository(mock_session):
         commercial_id=1,
         created_at=datetime.now(UTC),
     )
+    test_client.commercial = commercial_employee
+
+    repository.get_by_id.return_value = test_client
     repository.get_by_email.return_value = None
-    repository.create.return_value = Client(
-        id=1,
-        full_name="Test Client",
-        email="test@example.com",
-        phone="1234567890",
-        company_name="Test Company",
-        commercial_id=1,
-        created_at=datetime.now(UTC),
-    )
+    repository.create.return_value = test_client
     repository.update.return_value = Client(
         id=1,
         full_name="Updated Client",
@@ -44,17 +51,8 @@ def mock_repository(mock_session):
         commercial_id=1,
         created_at=datetime.now(UTC),
     )
-    repository.get_by_commercial.return_value = [
-        Client(
-            id=1,
-            full_name="Test Client",
-            email="test@example.com",
-            phone="1234567890",
-            company_name="Test Company",
-            commercial_id=1,
-            created_at=datetime.now(UTC),
-        )
-    ]
+    repository.get_by_commercial.return_value = [test_client]
+    repository.get_all.return_value = [test_client]
     return repository
 
 
@@ -334,7 +332,8 @@ class TestClientCommands:
         assert "Email: test@example.com" in result.output
         assert "Phone: 1234567890" in result.output
         assert "Company: Test Company" in result.output
-        mock_repository.get_by_commercial.assert_called_once()
+        assert "Commercial: Test Commercial" in result.output
+        mock_repository.get_all.assert_called_once()
 
     @patch("commands.client_commands.DatabaseConnection.get_session")
     @patch("commands.client_commands.ClientRepository")
@@ -353,10 +352,33 @@ class TestClientCommands:
         mock_get_session.return_value.__enter__.return_value = mock_session
         mock_repo_class.return_value = mock_repository
         mock_auth.return_value = mock_auth_service
-        mock_repository.get_by_commercial.return_value = []
+        mock_repository.get_all.return_value = []
 
         result = runner.invoke(client, ["list"])
 
         assert result.exit_code == 0
         assert "No clients found" in result.output
-        mock_repository.get_by_commercial.assert_called_once()
+        mock_repository.get_all.assert_called_once()
+
+    @patch("commands.client_commands.DatabaseConnection.get_session")
+    @patch("commands.client_commands.ClientRepository")
+    @patch("commands.client_commands.AuthService")
+    def test_list_clients_unauthorized(
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
+        mock_auth_service,
+    ):
+        """Test client listing with unauthorized user."""
+        mock_auth_service.get_current_user.return_value = None
+        mock_auth.return_value = mock_auth_service
+
+        result = runner.invoke(client, ["list"])
+
+        assert result.exit_code == 0
+        assert "Error: No authenticated user found" in result.output
+        mock_repository.get_all.assert_not_called()

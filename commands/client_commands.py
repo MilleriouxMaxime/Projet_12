@@ -149,22 +149,18 @@ def update(
 
 @client.command()
 def list():
-    """List all clients assigned to the current commercial user."""
+    """List all clients. All authenticated users can see all clients."""
     auth_service = AuthService()
-    if not auth_service.has_permission(Department.COMMERCIAL):
-        click.echo("Error: Only commercial users can list clients")
+    current_user = auth_service.get_current_user()
+    if not current_user:
+        click.echo("Error: No authenticated user found")
         return
 
     with DatabaseConnection.get_session() as session:
         repo = ClientRepository(session)
 
-        # Get current user
-        current_user = auth_service.get_current_user()
-        if not current_user:
-            click.echo("Error: No authenticated user found")
-            return
-
-        clients = repo.get_by_commercial(current_user.id)
+        # All authenticated users see all clients
+        clients = repo.get_all()
 
         if not clients:
             click.echo("No clients found")
@@ -177,4 +173,7 @@ def list():
             click.echo(f"Phone: {client.phone or 'Not provided'}")
             click.echo(f"Company: {client.company_name or 'Not provided'}")
             click.echo(f"Created At: {client.created_at}")
+            click.echo(
+                f"Commercial: {client.commercial.full_name if client.commercial else 'Not assigned'}"
+            )
             click.echo("-" * 50)
