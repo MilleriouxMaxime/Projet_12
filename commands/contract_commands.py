@@ -217,24 +217,16 @@ def update(
     "--unpaid", is_flag=True, help="Show only contracts with remaining amount"
 )
 def list(unsigned: bool = False, unpaid: bool = False):
-    """List contracts with optional filters."""
+    """List contracts with optional filters. All authenticated users can list contracts."""
     try:
         auth_service = AuthService()
-        if not (
-            auth_service.has_permission(Department.MANAGEMENT)
-            or auth_service.has_permission(Department.COMMERCIAL)
-        ):
-            click.echo("Error: Only management or commercial users can list contracts")
+        current_user = auth_service.get_current_user()
+        if not current_user:
+            click.echo("Error: No authenticated user found")
             return
 
         with DatabaseConnection.get_session() as session:
             repo = ContractRepository(session)
-
-            # Get current user
-            current_user = auth_service.get_current_user()
-            if not current_user:
-                click.echo("Error: No authenticated user found")
-                return
 
             # Get contracts based on filters and user role
             if current_user.department == Department.COMMERCIAL:
@@ -244,7 +236,7 @@ def list(unsigned: bool = False, unpaid: bool = False):
                     contracts = repo.get_unpaid_contracts(current_user.id)
                 else:
                     contracts = repo.get_by_commercial(current_user.id)
-            else:  # Management user
+            else:  # Management and Support users see all contracts
                 if unsigned:
                     contracts = repo.get_unsigned_contracts()
                 elif unpaid:
