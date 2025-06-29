@@ -1,6 +1,8 @@
-from sqlalchemy.orm import Session
-from models.models import Client, Employee
 from typing import List, Optional
+
+from sqlalchemy.orm import Session
+
+from models.models import Client, Employee
 
 
 class ClientRepository:
@@ -22,6 +24,10 @@ class ClientRepository:
     def get_by_email(self, email: str) -> Optional[Client]:
         """Get a client by email."""
         return self.session.query(Client).filter(Client.email == email).first()
+
+    def get_all(self) -> List[Client]:
+        """Get all clients."""
+        return self.session.query(Client).all()
 
     def get_by_commercial(self, commercial_id: int) -> List[Client]:
         """Get all clients for a specific commercial employee."""
