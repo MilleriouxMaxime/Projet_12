@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 import click
 
@@ -65,11 +65,39 @@ def create(
                 )
                 return
 
+            # Validate amount formats
+            try:
+                total_amount_decimal = Decimal(total_amount)
+                if total_amount_decimal <= 0:
+                    click.echo("Error: Total amount must be greater than 0")
+                    return
+            except (ValueError, InvalidOperation):
+                click.echo(
+                    "Error: Invalid total amount format. Please enter a valid number"
+                )
+                return
+
+            try:
+                remaining_amount_decimal = Decimal(remaining_amount)
+                if remaining_amount_decimal < 0:
+                    click.echo("Error: Remaining amount cannot be negative")
+                    return
+                if remaining_amount_decimal > total_amount_decimal:
+                    click.echo(
+                        "Error: Remaining amount cannot be greater than total amount"
+                    )
+                    return
+            except (ValueError, InvalidOperation):
+                click.echo(
+                    "Error: Invalid remaining amount format. Please enter a valid number"
+                )
+                return
+
             contract_data = {
                 "client_id": client_id,
                 "commercial_id": commercial_id,
-                "total_amount": Decimal(total_amount),
-                "remaining_amount": Decimal(remaining_amount),
+                "total_amount": total_amount_decimal,
+                "remaining_amount": remaining_amount_decimal,
                 "is_signed": False,
             }
 
@@ -157,15 +185,45 @@ def update(
             update_data = {}
             if total_amount.strip():
                 try:
-                    update_data["total_amount"] = Decimal(str(total_amount))
-                except ValueError:
-                    click.echo("Error: Invalid total amount format")
+                    total_amount_decimal = Decimal(str(total_amount))
+                    if total_amount_decimal <= 0:
+                        click.echo("Error: Total amount must be greater than 0")
+                        return
+                    update_data["total_amount"] = total_amount_decimal
+                except (ValueError, InvalidOperation):
+                    click.echo(
+                        "Error: Invalid total amount format. Please enter a valid number"
+                    )
                     return
             if remaining_amount.strip():
                 try:
-                    update_data["remaining_amount"] = Decimal(str(remaining_amount))
-                except ValueError:
-                    click.echo("Error: Invalid remaining amount format")
+                    remaining_amount_decimal = Decimal(str(remaining_amount))
+                    if remaining_amount_decimal < 0:
+                        click.echo("Error: Remaining amount cannot be negative")
+                        return
+                    # Check if remaining amount is greater than total amount (if total amount is being updated)
+                    if (
+                        "total_amount" in update_data
+                        and remaining_amount_decimal > update_data["total_amount"]
+                    ):
+                        click.echo(
+                            "Error: Remaining amount cannot be greater than total amount"
+                        )
+                        return
+                    # Check if remaining amount is greater than current total amount (if total amount is not being updated)
+                    elif (
+                        "total_amount" not in update_data
+                        and remaining_amount_decimal > contract.total_amount
+                    ):
+                        click.echo(
+                            "Error: Remaining amount cannot be greater than total amount"
+                        )
+                        return
+                    update_data["remaining_amount"] = remaining_amount_decimal
+                except (ValueError, InvalidOperation):
+                    click.echo(
+                        "Error: Invalid remaining amount format. Please enter a valid number"
+                    )
                     return
             if is_signed.strip():
                 if is_signed.lower() in ["true", "1", "yes"]:

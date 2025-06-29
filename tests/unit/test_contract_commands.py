@@ -202,6 +202,195 @@ class TestContractCommands:
     @patch("commands.contract_commands.DatabaseConnection.get_session")
     @patch("commands.contract_commands.ContractRepository")
     @patch("commands.contract_commands.AuthService")
+    def test_create_contract_invalid_total_amount(
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
+    ):
+        """Test contract creation with invalid total amount."""
+        mock_get_session.return_value.__enter__.return_value = mock_session
+        mock_repo_class.return_value = mock_repository
+        mock_auth.return_value.has_permission.return_value = True
+
+        result = runner.invoke(
+            contract,
+            [
+                "create",
+                "--client-id",
+                "1",
+                "--commercial-id",
+                "1",
+                "--total-amount",
+                "invalid",
+                "--remaining-amount",
+                "500.00",
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert (
+            "Error: Invalid total amount format. Please enter a valid number"
+            in result.output
+        )
+        mock_repository.create.assert_not_called()
+
+    @patch("commands.contract_commands.DatabaseConnection.get_session")
+    @patch("commands.contract_commands.ContractRepository")
+    @patch("commands.contract_commands.AuthService")
+    def test_create_contract_invalid_remaining_amount(
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
+    ):
+        """Test contract creation with invalid remaining amount."""
+        mock_get_session.return_value.__enter__.return_value = mock_session
+        mock_repo_class.return_value = mock_repository
+        mock_auth.return_value.has_permission.return_value = True
+
+        result = runner.invoke(
+            contract,
+            [
+                "create",
+                "--client-id",
+                "1",
+                "--commercial-id",
+                "1",
+                "--total-amount",
+                "1000.00",
+                "--remaining-amount",
+                "invalid",
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert (
+            "Error: Invalid remaining amount format. Please enter a valid number"
+            in result.output
+        )
+        mock_repository.create.assert_not_called()
+
+    @patch("commands.contract_commands.DatabaseConnection.get_session")
+    @patch("commands.contract_commands.ContractRepository")
+    @patch("commands.contract_commands.AuthService")
+    def test_create_contract_negative_total_amount(
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
+    ):
+        """Test contract creation with negative total amount."""
+        mock_get_session.return_value.__enter__.return_value = mock_session
+        mock_repo_class.return_value = mock_repository
+        mock_auth.return_value.has_permission.return_value = True
+
+        result = runner.invoke(
+            contract,
+            [
+                "create",
+                "--client-id",
+                "1",
+                "--commercial-id",
+                "1",
+                "--total-amount",
+                "-1000.00",
+                "--remaining-amount",
+                "500.00",
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Error: Total amount must be greater than 0" in result.output
+        mock_repository.create.assert_not_called()
+
+    @patch("commands.contract_commands.DatabaseConnection.get_session")
+    @patch("commands.contract_commands.ContractRepository")
+    @patch("commands.contract_commands.AuthService")
+    def test_create_contract_negative_remaining_amount(
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
+    ):
+        """Test contract creation with negative remaining amount."""
+        mock_get_session.return_value.__enter__.return_value = mock_session
+        mock_repo_class.return_value = mock_repository
+        mock_auth.return_value.has_permission.return_value = True
+
+        result = runner.invoke(
+            contract,
+            [
+                "create",
+                "--client-id",
+                "1",
+                "--commercial-id",
+                "1",
+                "--total-amount",
+                "1000.00",
+                "--remaining-amount",
+                "-500.00",
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Error: Remaining amount cannot be negative" in result.output
+        mock_repository.create.assert_not_called()
+
+    @patch("commands.contract_commands.DatabaseConnection.get_session")
+    @patch("commands.contract_commands.ContractRepository")
+    @patch("commands.contract_commands.AuthService")
+    def test_create_contract_remaining_greater_than_total(
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
+    ):
+        """Test contract creation with remaining amount greater than total amount."""
+        mock_get_session.return_value.__enter__.return_value = mock_session
+        mock_repo_class.return_value = mock_repository
+        mock_auth.return_value.has_permission.return_value = True
+
+        result = runner.invoke(
+            contract,
+            [
+                "create",
+                "--client-id",
+                "1",
+                "--commercial-id",
+                "1",
+                "--total-amount",
+                "1000.00",
+                "--remaining-amount",
+                "1500.00",
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert (
+            "Error: Remaining amount cannot be greater than total amount"
+            in result.output
+        )
+        mock_repository.create.assert_not_called()
+
+    @patch("commands.contract_commands.DatabaseConnection.get_session")
+    @patch("commands.contract_commands.ContractRepository")
+    @patch("commands.contract_commands.AuthService")
     def test_update_contract_success(
         self,
         mock_auth,
@@ -493,3 +682,209 @@ class TestContractCommands:
         assert "Contract ID: 1" in result.output
         assert "Commercial ID: 1" in result.output
         mock_repository.get_all.assert_called_once()
+
+    @patch("commands.contract_commands.DatabaseConnection.get_session")
+    @patch("commands.contract_commands.ContractRepository")
+    @patch("commands.contract_commands.AuthService")
+    def test_update_contract_invalid_total_amount(
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
+    ):
+        """Test contract update with invalid total amount."""
+        mock_get_session.return_value.__enter__.return_value = mock_session
+        mock_repo_class.return_value = mock_repository
+        mock_auth.return_value.has_permission.return_value = True
+
+        result = runner.invoke(
+            contract,
+            [
+                "update",
+                "--contract-id",
+                "1",
+                "--total-amount",
+                "invalid",
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert (
+            "Error: Invalid total amount format. Please enter a valid number"
+            in result.output
+        )
+        mock_repository.update.assert_not_called()
+
+    @patch("commands.contract_commands.DatabaseConnection.get_session")
+    @patch("commands.contract_commands.ContractRepository")
+    @patch("commands.contract_commands.AuthService")
+    def test_update_contract_invalid_remaining_amount(
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
+    ):
+        """Test contract update with invalid remaining amount."""
+        mock_get_session.return_value.__enter__.return_value = mock_session
+        mock_repo_class.return_value = mock_repository
+        mock_auth.return_value.has_permission.return_value = True
+
+        result = runner.invoke(
+            contract,
+            [
+                "update",
+                "--contract-id",
+                "1",
+                "--remaining-amount",
+                "invalid",
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert (
+            "Error: Invalid remaining amount format. Please enter a valid number"
+            in result.output
+        )
+        mock_repository.update.assert_not_called()
+
+    @patch("commands.contract_commands.DatabaseConnection.get_session")
+    @patch("commands.contract_commands.ContractRepository")
+    @patch("commands.contract_commands.AuthService")
+    def test_update_contract_negative_total_amount(
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
+    ):
+        """Test contract update with negative total amount."""
+        mock_get_session.return_value.__enter__.return_value = mock_session
+        mock_repo_class.return_value = mock_repository
+        mock_auth.return_value.has_permission.return_value = True
+
+        result = runner.invoke(
+            contract,
+            [
+                "update",
+                "--contract-id",
+                "1",
+                "--total-amount",
+                "-1000.00",
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Error: Total amount must be greater than 0" in result.output
+        mock_repository.update.assert_not_called()
+
+    @patch("commands.contract_commands.DatabaseConnection.get_session")
+    @patch("commands.contract_commands.ContractRepository")
+    @patch("commands.contract_commands.AuthService")
+    def test_update_contract_negative_remaining_amount(
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
+    ):
+        """Test contract update with negative remaining amount."""
+        mock_get_session.return_value.__enter__.return_value = mock_session
+        mock_repo_class.return_value = mock_repository
+        mock_auth.return_value.has_permission.return_value = True
+
+        result = runner.invoke(
+            contract,
+            [
+                "update",
+                "--contract-id",
+                "1",
+                "--remaining-amount",
+                "-500.00",
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Error: Remaining amount cannot be negative" in result.output
+        mock_repository.update.assert_not_called()
+
+    @patch("commands.contract_commands.DatabaseConnection.get_session")
+    @patch("commands.contract_commands.ContractRepository")
+    @patch("commands.contract_commands.AuthService")
+    def test_update_contract_remaining_greater_than_total(
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
+    ):
+        """Test contract update with remaining amount greater than total amount."""
+        mock_get_session.return_value.__enter__.return_value = mock_session
+        mock_repo_class.return_value = mock_repository
+        mock_auth.return_value.has_permission.return_value = True
+
+        result = runner.invoke(
+            contract,
+            [
+                "update",
+                "--contract-id",
+                "1",
+                "--remaining-amount",
+                "1500.00",
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert (
+            "Error: Remaining amount cannot be greater than total amount"
+            in result.output
+        )
+        mock_repository.update.assert_not_called()
+
+    @patch("commands.contract_commands.DatabaseConnection.get_session")
+    @patch("commands.contract_commands.ContractRepository")
+    @patch("commands.contract_commands.AuthService")
+    def test_update_contract_both_amounts_remaining_greater_than_total(
+        self,
+        mock_auth,
+        mock_repo_class,
+        mock_get_session,
+        runner,
+        mock_repository,
+        mock_session,
+    ):
+        """Test contract update with both amounts where remaining is greater than total."""
+        mock_get_session.return_value.__enter__.return_value = mock_session
+        mock_repo_class.return_value = mock_repository
+        mock_auth.return_value.has_permission.return_value = True
+
+        result = runner.invoke(
+            contract,
+            [
+                "update",
+                "--contract-id",
+                "1",
+                "--total-amount",
+                "1000.00",
+                "--remaining-amount",
+                "1500.00",
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert (
+            "Error: Remaining amount cannot be greater than total amount"
+            in result.output
+        )
+        mock_repository.update.assert_not_called()
