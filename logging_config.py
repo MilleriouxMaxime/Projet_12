@@ -41,7 +41,7 @@ def log_contract_signature(contract_data):
     sentry_sdk.capture_message(
         f"Contract signed: Contract ID {contract_data.get('id')}",
         level="info",
-        extra={
+        extras={
             "contract_id": contract_data.get("id"),
             "client_id": contract_data.get("client_id"),
             "total_amount": contract_data.get("total_amount"),
@@ -51,4 +51,4 @@ def log_contract_signature(contract_data):
 
 def log_exception(exception, context=None):
     """Log unexpected exceptions."""
-    sentry_sdk.capture_exception(exception, extra=context or {})
+    sentry_sdk.capture_exception(exception, extras=context or {})

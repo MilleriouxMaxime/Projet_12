@@ -492,4 +492,4 @@ class TestContractCommands:
         assert result.exit_code == 0
         assert "Contract ID: 1" in result.output
         assert "Commercial ID: 1" in result.output
-        mock_repository.get_by_commercial.assert_called_once()
+        mock_repository.get_all.assert_called_once()

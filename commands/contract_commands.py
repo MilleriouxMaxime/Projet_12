@@ -228,21 +228,13 @@ def list(unsigned: bool = False, unpaid: bool = False):
         with DatabaseConnection.get_session() as session:
             repo = ContractRepository(session)
 
-            # Get contracts based on filters and user role
-            if current_user.department == Department.COMMERCIAL:
-                if unsigned:
-                    contracts = repo.get_unsigned_contracts(current_user.id)
-                elif unpaid:
-                    contracts = repo.get_unpaid_contracts(current_user.id)
-                else:
-                    contracts = repo.get_by_commercial(current_user.id)
-            else:  # Management and Support users see all contracts
-                if unsigned:
-                    contracts = repo.get_unsigned_contracts()
-                elif unpaid:
-                    contracts = repo.get_unpaid_contracts()
-                else:
-                    contracts = repo.get_all()
+            # Get contracts based on filters - all authenticated users see all contracts
+            if unsigned:
+                contracts = repo.get_unsigned_contracts()
+            elif unpaid:
+                contracts = repo.get_unpaid_contracts()
+            else:
+                contracts = repo.get_all()
 
             if not contracts:
                 click.echo("No contracts found")
