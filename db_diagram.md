@@ -36,7 +36,6 @@ erDiagram
     Event {
         int id PK
         int contract_id FK
-        int client_id FK
         int support_id FK
         string name
         datetime start_date
@@ -51,7 +50,6 @@ erDiagram
     Employee ||--o{ Event : ""
     Client ||--o{ Contract : ""
     Contract ||--o{ Event : ""
-    Client ||--o{ Event : ""
 
     %% Role constraints
     %% Commercial employees can manage clients and contracts

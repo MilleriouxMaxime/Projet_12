@@ -37,7 +37,6 @@ def mock_repository(mock_session):
     repository.get_by_id.return_value = Event(
         id=1,
         contract_id=1,
-        client_id=1,
         support_id=1,
         name="Test Event",
         start_date=datetime.now(UTC),
@@ -49,7 +48,6 @@ def mock_repository(mock_session):
     repository.create.return_value = Event(
         id=1,
         contract_id=1,
-        client_id=1,
         support_id=1,
         name="Test Event",
         start_date=datetime.now(UTC),
@@ -61,7 +59,6 @@ def mock_repository(mock_session):
     repository.update.return_value = Event(
         id=1,
         contract_id=1,
-        client_id=1,
         support_id=1,
         name="Updated Event",
         start_date=datetime.now(UTC),
@@ -74,7 +71,6 @@ def mock_repository(mock_session):
         Event(
             id=1,
             contract_id=1,
-            client_id=1,
             support_id=1,
             name="Test Event",
             start_date=datetime.now(UTC),
@@ -88,7 +84,6 @@ def mock_repository(mock_session):
         Event(
             id=1,
             contract_id=1,
-            client_id=1,
             support_id=1,
             name="Test Event",
             start_date=datetime.now(UTC),
@@ -107,6 +102,9 @@ def mock_repository(mock_session):
         is_signed=True,
         created_at=datetime.now(UTC),
     )
+    # Set up the client relationship on the contract
+    mock_client = Client(id=1, full_name="Test Client", email="test@example.com")
+    repository.get_contract.return_value.client = mock_client
     repository.get_client.return_value = Client(
         id=1, full_name="Test Client", email="test@example.com"
     )
@@ -118,6 +116,20 @@ def mock_repository(mock_session):
         department=Department.SUPPORT,
         role="Support",
     )
+    # Set up the contract relationship on the events
+    mock_contract = Contract(
+        id=1,
+        client_id=1,
+        commercial_id=1,
+        total_amount=1000.00,
+        remaining_amount=500.00,
+        is_signed=True,
+        created_at=datetime.now(UTC),
+    )
+    mock_client = Client(id=1, full_name="Test Client", email="test@example.com")
+    mock_contract.client = mock_client
+    repository.get_all.return_value[0].contract = mock_contract
+    repository.get_by_contract.return_value[0].contract = mock_contract
     return repository
 
 
@@ -174,8 +186,6 @@ class TestEventCommands:
                 "create",
                 "--contract-id",
                 "1",
-                "--client-id",
-                "1",
                 "--support-id",
                 "1",
                 "--name",
@@ -229,8 +239,6 @@ class TestEventCommands:
                 "create",
                 "--contract-id",
                 "1",
-                "--client-id",
-                "1",
                 "--support-id",
                 "1",
                 "--name",
@@ -282,14 +290,15 @@ class TestEventCommands:
             is_signed=False,
             created_at=datetime.now(UTC),
         )
+        # Set up the client relationship on the contract
+        mock_client = Client(id=1, full_name="Test Client", email="test@example.com")
+        mock_repository.get_contract.return_value.client = mock_client
 
         result = runner.invoke(
             event,
             [
                 "create",
                 "--contract-id",
-                "1",
-                "--client-id",
                 "1",
                 "--support-id",
                 "1",
@@ -437,7 +446,7 @@ class TestEventCommands:
         assert "Event ID: 1" in result.output
         assert "Name: Test Event" in result.output
         assert "Contract ID: 1" in result.output
-        assert "Client ID: 1" in result.output
+        assert "Client: Test Client" in result.output
         assert "Support ID: 1" in result.output
         assert "Location: Test Location" in result.output
         assert "Attendees: 10" in result.output
@@ -466,7 +475,6 @@ class TestEventCommands:
         mock_auth.return_value = mock_auth_service
         mock_repository.get_all.return_value = []
         mock_repository.get_by_contract.return_value = []
-        mock_repository.get_by_client.return_value = []
         mock_repository.get_by_support.return_value = []
         mock_repository.get_without_support.return_value = []
 
@@ -508,7 +516,6 @@ class TestEventCommands:
             Event(
                 id=1,
                 contract_id=1,
-                client_id=1,
                 support_id=None,
                 name="Test Event",
                 start_date=datetime.now(UTC),
@@ -518,6 +525,19 @@ class TestEventCommands:
                 notes="Test Notes",
             )
         ]
+        # Set up the contract relationship on the event
+        mock_contract = Contract(
+            id=1,
+            client_id=1,
+            commercial_id=1,
+            total_amount=1000.00,
+            remaining_amount=500.00,
+            is_signed=True,
+            created_at=datetime.now(UTC),
+        )
+        mock_client = Client(id=1, full_name="Test Client", email="test@example.com")
+        mock_contract.client = mock_client
+        mock_repository.get_without_support.return_value[0].contract = mock_contract
 
         result = runner.invoke(event, ["list", "--without-support"])
 
@@ -559,7 +579,6 @@ class TestEventCommands:
             Event(
                 id=1,
                 contract_id=1,
-                client_id=1,
                 support_id=1,
                 name="Test Event",
                 start_date=datetime.now(UTC),
@@ -569,6 +588,19 @@ class TestEventCommands:
                 notes="Test Notes",
             )
         ]
+        # Set up the contract relationship on the event
+        mock_contract = Contract(
+            id=1,
+            client_id=1,
+            commercial_id=1,
+            total_amount=1000.00,
+            remaining_amount=500.00,
+            is_signed=True,
+            created_at=datetime.now(UTC),
+        )
+        mock_client = Client(id=1, full_name="Test Client", email="test@example.com")
+        mock_contract.client = mock_client
+        mock_repository.get_by_support.return_value[0].contract = mock_contract
 
         result = runner.invoke(event, ["list", "--my-events"])
 

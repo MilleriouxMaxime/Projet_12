@@ -28,10 +28,6 @@ class EventRepository:
         """Get all events for a specific contract."""
         return self.session.query(Event).filter(Event.contract_id == contract_id).all()
 
-    def get_by_client(self, client_id: int) -> List[Event]:
-        """Get all events for a specific client."""
-        return self.session.query(Event).filter(Event.client_id == client_id).all()
-
     def get_by_support(self, support_id: int) -> List[Event]:
         """Get all events assigned to a specific support employee."""
         return self.session.query(Event).filter(Event.support_id == support_id).all()

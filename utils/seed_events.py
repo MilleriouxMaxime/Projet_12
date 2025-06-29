@@ -319,7 +319,6 @@ def create_sample_data():
 
                 event = Event(
                     contract_id=contract.id,
-                    client_id=client.id,
                     support_id=support_id,
                     name=name,
                     start_date=start_datetime,

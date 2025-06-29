@@ -81,7 +81,6 @@ class Client(Base):
     # Relationships
     commercial = relationship("Employee", back_populates="clients")
     contracts = relationship("Contract", back_populates="client")
-    events = relationship("Event", back_populates="client")
 
 
 class Contract(Base):
@@ -106,7 +105,6 @@ class Event(Base):
 
     id = Column(Integer, primary_key=True)
     contract_id = Column(Integer, ForeignKey("contract.id"))
-    client_id = Column(Integer, ForeignKey("client.id"))
     support_id = Column(Integer, ForeignKey("employee.id"))
     name = Column(String, nullable=False)
     start_date = Column(DateTime, nullable=False)
@@ -117,5 +115,4 @@ class Event(Base):
 
     # Relationships
     contract = relationship("Contract", back_populates="events")
-    client = relationship("Client", back_populates="events")
     support = relationship("Employee", back_populates="events")

@@ -21,9 +21,6 @@ def event():
     "--contract-id", prompt="Contract ID", required=True, type=int, help="Contract ID"
 )
 @click.option(
-    "--client-id", prompt="Client ID", required=True, type=int, help="Client ID"
-)
-@click.option(
     "--support-id",
     prompt="Support employee ID",
     required=True,
@@ -48,7 +45,6 @@ def event():
 @click.option("--notes", prompt="Event notes", help="Event notes")
 def create(
     contract_id: int,
-    client_id: int,
     support_id: int,
     name: str,
     start_date: str,
@@ -87,12 +83,6 @@ def create(
                 click.echo("Error: You can only create events for your own contracts")
                 return
 
-            # Verify client exists
-            client = repo.get_client(client_id)
-            if not client:
-                click.echo(f"Error: Client with ID {client_id} not found")
-                return
-
             # Verify support employee exists and is in support department
             support = repo.get_support(support_id)
             if not support:
@@ -109,7 +99,6 @@ def create(
 
                 event_data = {
                     "contract_id": contract_id,
-                    "client_id": client_id,
                     "support_id": support_id,
                     "name": name,
                     "start_date": start_datetime,
@@ -121,7 +110,7 @@ def create(
 
                 event = repo.create(event_data)
                 click.echo(
-                    f"Successfully created event '{name}' for client {client.full_name}"
+                    f"Successfully created event '{name}' for client {contract.client.full_name}"
                 )
             except ValueError:
                 click.echo("Error: Invalid date format. Use YYYY-MM-DD HH:MM")
@@ -131,7 +120,6 @@ def create(
             {
                 "action": "create_event",
                 "contract_id": contract_id,
-                "client_id": client_id,
                 "support_id": support_id,
                 "name": name,
             },
@@ -295,12 +283,10 @@ def update(
 
 @event.command()
 @click.option("--contract-id", type=int, help="Filter by contract")
-@click.option("--client-id", type=int, help="Filter by client")
 @click.option("--without-support", is_flag=True, help="Show events without support")
 @click.option("--my-events", is_flag=True, help="Show only assigned events")
 def list(
     contract_id: int = None,
-    client_id: int = None,
     without_support: bool = False,
     my_events: bool = False,
 ):
@@ -326,8 +312,6 @@ def list(
             elif current_user.department == Department.COMMERCIAL:
                 if contract_id:
                     events = repo.get_by_contract(contract_id)
-                elif client_id:
-                    events = repo.get_by_client(client_id)
                 else:
                     events = repo.get_all()
             else:  # Management user
@@ -335,8 +319,6 @@ def list(
                     events = repo.get_without_support()
                 elif contract_id:
                     events = repo.get_by_contract(contract_id)
-                elif client_id:
-                    events = repo.get_by_client(client_id)
                 else:
                     events = repo.get_all()
 
@@ -348,7 +330,7 @@ def list(
                 click.echo(f"\nEvent ID: {event.id}")
                 click.echo(f"Name: {event.name}")
                 click.echo(f"Contract ID: {event.contract_id}")
-                click.echo(f"Client ID: {event.client_id}")
+                click.echo(f"Client: {event.contract.client.full_name}")
                 click.echo(f"Support ID: {event.support_id}")
                 click.echo(f"Start Date: {event.start_date}")
                 click.echo(f"End Date: {event.end_date}")
@@ -362,7 +344,6 @@ def list(
             {
                 "action": "list_events",
                 "contract_id": contract_id,
-                "client_id": client_id,
                 "without_support": without_support,
                 "my_events": my_events,
             },
