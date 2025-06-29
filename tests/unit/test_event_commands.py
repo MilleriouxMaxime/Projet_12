@@ -249,10 +249,7 @@ class TestEventCommands:
         )
 
         assert result.exit_code == 0
-        assert (
-            "Error: Only commercial or management users can create events"
-            in result.output
-        )
+        assert "Error: Only commercial users can create events" in result.output
         mock_repository.create.assert_not_called()
 
     @patch("commands.event_commands.DatabaseConnection.get_session")
@@ -389,13 +386,26 @@ class TestEventCommands:
             created_at=datetime.now(UTC),
         )
 
+        # Mock AuthService to simulate a commercial user
+        mock_auth_service.get_current_user.return_value = Employee(
+            id=2,
+            employee_number="EMP002",
+            full_name="Commercial User",
+            email="commercial@example.com",
+            department=Department.COMMERCIAL,
+            role="Sales",
+        )
+        mock_auth_service.has_permission.side_effect = (
+            lambda dept: dept == Department.COMMERCIAL
+        )
+
         result = runner.invoke(
             event, ["update", "--event-id", "1", "--name", "Updated Event"]
         )
 
         assert result.exit_code == 0
         assert (
-            "Error: You can only update events for your own contracts" in result.output
+            "Error: Only management or support users can update events" in result.output
         )
         mock_repository.update.assert_not_called()
 

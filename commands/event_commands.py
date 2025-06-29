@@ -60,11 +60,8 @@ def create(
     """Create a new event."""
     try:
         auth_service = AuthService()
-        if not (
-            auth_service.has_permission(Department.COMMERCIAL)
-            or auth_service.has_permission(Department.MANAGEMENT)
-        ):
-            click.echo("Error: Only commercial or management users can create events")
+        if not auth_service.has_permission(Department.COMMERCIAL):
+            click.echo("Error: Only commercial users can create events")
             return
 
         with DatabaseConnection.get_session() as session:
@@ -85,11 +82,8 @@ def create(
                 click.echo("Error: Cannot create event for unsigned contract")
                 return
 
-            # If commercial user, verify they own the contract
-            if (
-                current_user.department == Department.COMMERCIAL
-                and contract.commercial_id != current_user.id
-            ):
+            # Verify commercial user owns the contract
+            if contract.commercial_id != current_user.id:
                 click.echo("Error: You can only create events for your own contracts")
                 return
 
@@ -207,12 +201,9 @@ def update(
         auth_service = AuthService()
         if not (
             auth_service.has_permission(Department.MANAGEMENT)
-            or auth_service.has_permission(Department.COMMERCIAL)
             or auth_service.has_permission(Department.SUPPORT)
         ):
-            click.echo(
-                "Error: Only management, commercial, or support users can update events"
-            )
+            click.echo("Error: Only management or support users can update events")
             return
 
         with DatabaseConnection.get_session() as session:
@@ -235,14 +226,6 @@ def update(
                 if event.support_id != current_user.id:
                     click.echo("Error: You can only update events assigned to you")
                     return
-            elif current_user.department == Department.COMMERCIAL:
-                contract = repo.get_contract(event.contract_id)
-                if contract.commercial_id != current_user.id:
-                    click.echo(
-                        "Error: You can only update events for your own contracts"
-                    )
-                    return
-
             update_data = {}
             if name.strip():
                 update_data["name"] = name
