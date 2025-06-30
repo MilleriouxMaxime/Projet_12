@@ -14,7 +14,7 @@ class AuthService:
         self.jwt_secret = os.getenv("JWT_SECRET")  # Get from environment variable
         self.jwt_algorithm = "HS256"
         self.token_expiry = timedelta(days=1)
-        self.token_file = Path.home() / ".epicevents_token"
+        self.token_file = Path.cwd() / ".epicevents_token"
 
     def authenticate(self, email: str, password: str) -> tuple[bool, str | None]:
         with DatabaseConnection.get_session() as session:
